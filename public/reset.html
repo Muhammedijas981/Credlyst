@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Credlyst Database</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            color: #111827;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .success {
+            color: #10b981;
+            font-weight: 600;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Clear Credlyst Database</h1>
+        <p>If you're experiencing issues, click the button below to clear the database and start fresh.</p>
+        <button onclick="clearDatabase()">Clear Database</button>
+        <button onclick="window.location.href='/'">Go to App</button>
+        <div id="message" style="margin-top: 1rem;"></div>
+    </div>
+
+    <script>
+        async function clearDatabase() {
+            const messageEl = document.getElementById('message');
+            try {
+                // Delete IndexedDB
+                const deleteRequest = indexedDB.deleteDatabase('CredlystDB');
+                
+                deleteRequest.onsuccess = () => {
+                    messageEl.innerHTML = '<p class="success">✅ Database cleared successfully! You can now go to the app.</p>';
+                    
+                    // Also clear localStorage
+                    localStorage.removeItem('credlyst_theme');
+                    localStorage.removeItem('credlyst_view_mode');
+                    localStorage.removeItem('credlyst_sort_by');
+                    localStorage.removeItem('credlyst_onboarding_completed');
+                };
+                
+                deleteRequest.onerror = () => {
+                    messageEl.innerHTML = '<p class="error">❌ Failed to clear database. Please try manually in DevTools.</p>';
+                };
+                
+                deleteRequest.onblocked = () => {
+                    messageEl.innerHTML = '<p class="error">⚠️ Database is blocked. Please close all Credlyst tabs and try again.</p>';
+                };
+            } catch (error) {
+                messageEl.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

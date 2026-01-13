@@ -1,0 +1,81 @@
+:root {
+    /* --- Palette: Clean SaaS Look --- */
+    --color-brand: #2563EB;       /* Vibrant Blue from reference */
+    --color-brand-dark: #1d4ed8;  /* Darker blue for hover */
+    --color-brand-light: #eff6ff; /* Light blue background for tags/active states */
+    
+    --color-black: #0f172a;       /* Slate black */
+    --color-slate-800: #1e293b;
+    --color-slate-600: #475569;
+    --color-slate-400: #94a3b8;
+    --color-slate-200: #e2e8f0;
+    --color-slate-50: #f8fafc;
+    
+    --color-white: #ffffff;
+    
+    /* --- Semantic Mappings --- */
+    --color-primary: var(--color-brand);
+    --color-primary-hover: var(--color-brand-dark);
+    --color-primary-bg: var(--color-brand-light);
+
+    --bg-body: var(--color-slate-50);     /* Light gray background for dashboard */
+    --bg-card: var(--color-white);
+    --bg-sidebar: var(--color-white);
+    
+    --text-primary: var(--color-black);
+    --text-secondary: var(--color-slate-600);
+    --text-tertiary: var(--color-slate-400);
+    --text-inverse: var(--color-white);
+
+    /* --- Borders & Depth --- */
+    --border-color: var(--color-slate-200);
+    --border-hover: var(--color-slate-400);
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+    /* --- Layout Dimensions --- */
+    --sidebar-width: 260px;
+    --navbar-height: 70px;
+    --container-max: 1200px;
+    
+    /* --- Radii --- */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    
+    /* --- Typography --- */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme="dark"] {
+    --bg-body: #0f172a;
+    --bg-card: #1e293b;
+    --bg-sidebar: #1e293b;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    
+    --border-color: #334155;
+    --color-slate-50: #0f172a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Glass Utility */
+.glass {
+    background: var(--bg-surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+}
+
