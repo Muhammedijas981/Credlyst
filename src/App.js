@@ -111,22 +111,19 @@ class App {
     renderLandingPage() {
         return `
             <div class="landing-page">
-                <!-- Navbar -->
-                <nav class="landing-nav">
-                    <div class="container nav-container">
-                        <div class="logo-area">
-                            <img src="/logo.png" alt="Credlyst Logo" class="logo-image" style="width: 24px; height: 24px;">
-                            <span class="logo-text">Credlyst</span>
+                <!-- Header -->
+                <header class="landing-header">
+                    <div class="header-container">
+                        <div class="header-left">
+                            <img src="/logo.png" alt="Credlyst" class="header-logo">
+                            <span class="header-brand">Credlyst</span>
                         </div>
-                        <div class="nav-links">
-                            <button class="btn btn-ghost" data-action="nav-login">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                                Sign In
-                            </button>
-                            <button class="btn btn-primary" data-action="nav-signup" style="padding: 0.6rem 1.25rem;">Get Started</button>
+                        <div class="header-right">
+                            <button class="btn-signin" data-action="nav-login">Sign In</button>
+                            <button class="btn-getstarted" data-action="nav-signup">Get Started</button>
                         </div>
                     </div>
-                </nav>
+                </header>
 
                 <!-- Hero Section -->
                 <header class="hero-section">
@@ -297,6 +294,10 @@ class App {
         const iconClock = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
         const iconSettings = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
         const iconSearch = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+        const iconMenu = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+        const iconPlus = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+        const iconUser = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+        const iconCategory = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>`;
 
         // Dynamic categories list
         const categoriesHTML = this.categories.map(cat => `
@@ -308,7 +309,7 @@ class App {
         return `
             <div class="dashboard-wrapper">
                 <!-- SIDEBAR -->
-                <aside class="sidebar">
+                <aside class="sidebar" id="sidebar">
                     <div class="sidebar-top">
                         <div class="logo-area">
                             <img src="/logo.png" alt="Credlyst Logo" class="logo-image">
@@ -329,7 +330,7 @@ class App {
                                 <span>Recent</span>
                             </a>
                             <a href="#" class="nav-item ${this.currentView === 'categories-page' ? 'active' : ''}" data-view="categories-page">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+                                ${iconCategory}
                                 <span>Categories</span>
                             </a>
                         </nav>
@@ -358,10 +359,44 @@ class App {
 
                 <!-- MAIN CONTENT -->
                 <main class="main-content">
+                    <!-- Mobile Logo Section -->
+                    <div class="mobile-logo-section">
+                        <div class="mobile-logo-left">
+                            <img src="/logo.png" alt="Credlyst" class="mobile-app-logo">
+                            <span class="mobile-app-name">Credlyst</span>
+                        </div>
+                        <div class="mobile-profile-action">
+                            <button id="mobile-profile-toggle" class="mobile-profile-btn">
+                                <div class="avatar-sm">${this.user.name.charAt(0)}</div>
+                            </button>
+                            
+                            <!-- Profile Dropdown -->
+                            <div id="mobile-profile-dropdown" class="profile-dropdown hidden">
+                                <div class="dropdown-header">
+                                    <div class="avatar-md">${this.user.name.charAt(0)}</div>
+                                    <div class="dropdown-user-info">
+                                        <div class="dropdown-name">${this.user.name}</div>
+                                        <div class="dropdown-plan">Free Plan</div>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <button id="mobile-logout-btn" class="dropdown-item danger">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Log out
+                                </button>
+                            </div>
+                            <div id="profile-overlay" class="profile-overlay hidden"></div>
+                        </div>
+                    </div>
+                    
                     <header class="top-bar">
                         <div class="search-wrapper">
                             ${iconSearch}
-                            <input type="text" id="global-search" placeholder="Search links by name, tag or URL...">
+                            <input type="text" id="global-search" placeholder="Search links...">
                         </div>
                         <button class="btn btn-primary" id="add-link-btn">+ Add New Link</button>
                     </header>
@@ -376,8 +411,35 @@ class App {
                         </div>
                     </div>
                 </main>
+
+                <!-- MOBILE BOTTOM NAVIGATION -->
+                <nav class="mobile-nav">
+                    <div class="mobile-nav-items">
+                        <a href="#" class="mobile-nav-item ${this.currentView === 'all' ? 'active' : ''}" data-view="all">
+                            ${iconDashboard}
+                            <span>All</span>
+                        </a>
+                        <a href="#" class="mobile-nav-item ${this.currentView === 'favorites' ? 'active' : ''}" data-view="favorites">
+                            ${iconHeart}
+                            <span>Favorites</span>
+                        </a>
+                        <a href="#" class="mobile-nav-item ${this.currentView === 'categories-page' ? 'active' : ''}" data-view="categories-page">
+                            ${iconCategory}
+                            <span>Categories</span>
+                        </a>
+                        <a href="#" class="mobile-nav-item ${this.currentView === 'recent' ? 'active' : ''}" data-view="recent">
+                            ${iconClock}
+                            <span>Recent</span>
+                        </a>
+                    </div>
+                </nav>
+
+                <!-- MOBILE FAB -->
+                <button class="mobile-fab" id="mobile-add-btn">
+                    ${iconPlus}
+                </button>
                 
-                 <div id="modal-container"></div>
+                <div id="modal-container"></div>
             </div>
         `;
     }
@@ -439,8 +501,44 @@ class App {
                 authService.logout();
             });
             
-            // Add Link
+            // Add Link (Desktop)
             document.getElementById('add-link-btn')?.addEventListener('click', () => this.showAddLinkModal());
+            
+            // Mobile FAB
+            document.getElementById('mobile-add-btn')?.addEventListener('click', () => this.showAddLinkModal());
+            
+            // Mobile Profile Dropdown Toggle
+            const mobileProfileToggle = document.getElementById('mobile-profile-toggle');
+            const mobileProfileDropdown = document.getElementById('mobile-profile-dropdown');
+            const profileOverlay = document.getElementById('profile-overlay');
+            
+            if (mobileProfileToggle && mobileProfileDropdown && profileOverlay) {
+                const toggleDropdown = () => {
+                    mobileProfileDropdown.classList.toggle('hidden');
+                    profileOverlay.classList.toggle('hidden');
+                };
+                
+                mobileProfileToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleDropdown();
+                });
+                
+                profileOverlay.addEventListener('click', toggleDropdown);
+                
+                // Close when clicking outside (fallback)
+                document.addEventListener('click', (e) => {
+                    if (!mobileProfileDropdown.classList.contains('hidden') && 
+                        !mobileProfileDropdown.contains(e.target) && 
+                        !mobileProfileToggle.contains(e.target)) {
+                        toggleDropdown();
+                    }
+                });
+            }
+            
+            // Mobile Logout
+            document.getElementById('mobile-logout-btn')?.addEventListener('click', () => {
+                authService.logout();
+            });
             
             // Search
             const searchInput = document.getElementById('global-search');
@@ -450,12 +548,16 @@ class App {
                 });
             }
 
-            // Navigation items (All/Favorites/Recent)
+            // Navigation items (All/Favorites/Recent) - works for both desktop and mobile
             document.querySelectorAll('[data-view]').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.currentView = e.currentTarget.dataset.view;
                     this.loadView();
+                    
+                    // Update active states
+                    document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll(`[data-view="${this.currentView}"]`).forEach(el => el.classList.add('active'));
                 });
             });
 
@@ -680,15 +782,20 @@ class App {
         
         modalContainer.innerHTML = `
             <div class="modal-overlay">
-                <div class="modal" style="max-width: 400px;">
+                <div class="modal" style="max-width: 480px;">
                     <div class="modal-header">
                         <h2>Create Category</h2>
-                        <button class="btn-icon close-modal">×</button>
+                        <button class="close-modal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                     </div>
                     <form id="create-category-inline-form">
                         <div class="form-group">
-                            <label>Category Name</label>
-                            <input type="text" name="categoryName" required placeholder="e.g. Work, Personal, Projects..." autofocus>
+                            <label>Category Name <span class="required">*</span></label>
+                            <input type="text" name="categoryName" required placeholder="e.g., Work, Personal, Projects..." autofocus>
                         </div>
                         <div id="error-message"></div>
                         <button type="submit" class="btn btn-primary btn-block">Create Category</button>
@@ -954,27 +1061,34 @@ class App {
                 <div class="modal">
                     <div class="modal-header">
                         <h2>Add New Link</h2>
-                        <button class="btn-icon close-modal">×</button>
+                        <button class="close-modal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                     </div>
                     <form id="add-link-form">
-                        <div class="form-group">
-                            <label>Title</label>
-                            <input type="text" name="title" required placeholder="e.g. My Portfolio">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Title <span class="required">*</span></label>
+                                <input type="text" name="title" required placeholder="e.g., My Portfolio">
+                            </div>
+                            <div class="form-group">
+                                <label>Category <span class="required">*</span></label>
+                                <select name="category" required>
+                                    <option value="">Select a category...</option>
+                                    ${categoryOptions}
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label>URL</label>
-                            <input type="url" name="url" required placeholder="https://...">
+                            <label>URL <span class="required">*</span></label>
+                            <input type="url" name="url" required placeholder="https://example.com">
                         </div>
                         <div class="form-group">
                             <label>Description</label>
                             <textarea name="desc" placeholder="Brief description..." rows="3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Category</label>
-                            <select name="category" required>
-                                <option value="">Select a category...</option>
-                                ${categoryOptions}
-                            </select>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Add Link</button>
                     </form>
@@ -1025,29 +1139,34 @@ class App {
                 <div class="modal">
                     <div class="modal-header">
                         <h2>Edit Link</h2>
-                        <button class="btn-icon close-modal">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <button class="close-modal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
                         </button>
                     </div>
                     <form id="edit-link-form">
-                        <div class="form-group">
-                            <label>URL</label>
-                            <input type="url" name="url" required value="${link.url}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Title <span class="required">*</span></label>
+                                <input type="text" name="title" required value="${link.title}">
+                            </div>
+                            <div class="form-group">
+                                <label>Category <span class="required">*</span></label>
+                                <select name="category" required>
+                                    <option value="">Select a category...</option>
+                                    ${categoryOptions}
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label>Title</label>
-                            <input type="text" name="title" required value="${link.title}">
+                            <label>URL <span class="required">*</span></label>
+                            <input type="url" name="url" required value="${link.url}">
                         </div>
                         <div class="form-group">
                             <label>Description</label>
                             <textarea name="desc" rows="3">${link.description || ''}</textarea>
-                        </div>
-                         <div class="form-group">
-                            <label>Category</label>
-                            <select name="category" required>
-                                <option value="">Select a category...</option>
-                                ${categoryOptions}
-                            </select>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
                     </form>
