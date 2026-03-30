@@ -1,74 +1,116 @@
+import { supabase } from '../lib/supabase.js';
+
 export class AuthService {
     constructor() {
-        this.token = localStorage.getItem('credlyst_auth_token');
-        this.currentUser = JSON.parse(localStorage.getItem('credlyst_user')) || null;
+        this.currentUser = null;
+        this.initPromise = this.initAuth();
+    }
+
+    async initAuth() {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            this.currentUser = session.user;
+        }
+
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                this.currentUser = session.user;
+            } else {
+                this.currentUser = null;
+            }
+        });
     }
 
     get isAuthenticated() {
-        return !!this.token; // Simple check for now
+        return !!this.currentUser;
     }
 
     async login(email, password) {
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Login failed');
-            }
+            if (error) throw error;
 
-            const data = await response.json();
-            this.setSession(data);
-            return data.user;
+            this.currentUser = data.user;
+            return {
+                id: data.user.id,
+                email: data.user.email,
+                name: data.user.user_metadata?.name || email.split('@')[0]
+            };
         } catch (error) {
             console.error('Login error:', error);
-            throw error;
+            throw new Error(error.message || 'Login failed');
         }
     }
 
     async signup(name, email, password) {
-         try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password })
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name: name
+                    },
+                    emailRedirectTo: window.location.origin
+                }
             });
 
-             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Signup failed');
+            if (error) throw error;
+
+            // Check if email confirmation is required
+            if (data.user && !data.session) {
+                // Email confirmation required
+                throw new Error('Please check your email to confirm your account before logging in.');
             }
 
-            const data = await response.json();
-            this.setSession(data);
-            return data.user;
+            // If we have a session, user is logged in immediately (email confirmation disabled)
+            if (data.session) {
+                this.currentUser = data.user;
+                return {
+                    id: data.user.id,
+                    email: data.user.email,
+                    name: name
+                };
+            }
+
+            throw new Error('Signup completed but no session created. Please try logging in.');
         } catch (error) {
-             console.error('Signup error:', error);
-             throw error;
+            console.error('Signup error:', error);
+            throw new Error(error.message || 'Signup failed');
         }
     }
 
-    logout() {
-        localStorage.removeItem('credlyst_auth_token');
-        localStorage.removeItem('credlyst_user');
-        this.token = null;
-        this.currentUser = null;
-        window.location.reload();
-    }
-
-    setSession(data) {
-        this.token = data.token;
-        this.currentUser = data.user;
-        localStorage.setItem('credlyst_auth_token', data.token);
-        localStorage.setItem('credlyst_user', JSON.stringify(data.user));
+    async logout() {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            
+            this.currentUser = null;
+            window.location.reload();
+        } catch (error) {
+            console.error('Logout error:', error);
+            throw error;
+        }
     }
 
     getToken() {
-        return this.token;
+        return supabase.auth.getSession().then(({ data }) => data.session?.access_token);
+    }
+
+    getCurrentUser() {
+        if (!this.currentUser) return null;
+        return {
+            id: this.currentUser.id,
+            email: this.currentUser.email,
+            name: this.currentUser.user_metadata?.name || this.currentUser.email?.split('@')[0] || 'User',
+            raw: this.currentUser
+        };
     }
 }
 

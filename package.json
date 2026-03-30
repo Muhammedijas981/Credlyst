@@ -5,22 +5,18 @@
   "type": "module",
   "description": "A beautiful, privacy-focused link management tool",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"vite\"",
+    "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "server": "node server/index.js"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "body-parser": "^2.2.2",
-    "concurrently": "^9.2.1",
-    "cors": "^2.8.5",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.7",
+    "@supabase/supabase-js": "^2.93.1",
     "lucide": "^0.344.0",
     "react-hot-toast": "^2.6.0",
-    "sql.js": "^1.10.3",
-    "sqlite3": "^5.1.7",
+    "react-toastify": "^11.0.5",
     "sweetalert2": "^11.26.17",
     "toastify-js": "^1.12.0"
   },

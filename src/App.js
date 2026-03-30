@@ -1,52 +1,7 @@
 import linkManager from './services/linkManager.js';
 import searchEngine from './services/searchEngine.js';
 import authService from './services/authService.js';
-import Toastify from 'toastify-js';
-
-const toast = {
-    success: (msg) => {
-        Toastify({
-            text: msg,
-            duration: 3000,
-            gravity: "top", // `top` or `bottom`
-            position: "right", // `left`, `center` or `right`
-            stopOnFocus: true, // Prevents dismissing of toast on hover
-            style: {
-                background: "linear-gradient(to right, #00b09b, #96c93d)",
-                borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-            },
-        }).showToast();
-    },
-    error: (msg) => {
-        Toastify({
-            text: msg,
-            duration: 4000,
-            gravity: "top",
-            position: "right",
-            stopOnFocus: true,
-            style: {
-                background: "linear-gradient(to right, #ff5f6d, #ffc371)",
-                borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-            },
-        }).showToast();
-    },
-    info: (msg) => {
-        Toastify({
-            text: msg,
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            stopOnFocus: true,
-            style: {
-                background: "linear-gradient(to right, #2193b0, #6dd5ed)",
-                borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-            },
-        }).showToast();
-    }
-};
+import toast from './utils/toast.js';
 
 class App {
     constructor() {
@@ -59,9 +14,11 @@ class App {
 
     async init() {
         try {
+            await authService.initPromise;
+            
             if (authService.isAuthenticated) {
                 this.currentPage = 'dashboard';
-                this.user = authService.currentUser;
+                this.user = authService.getCurrentUser();
             }
 
             this.applyTheme();
@@ -474,10 +431,38 @@ class App {
         if (loginForm) {
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await authService.login(e.target.email.value, e.target.password.value);
-                this.user = authService.currentUser;
-                this.currentPage = 'dashboard';
-                this.render();
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                try {
+                    // Show loader
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div class="spinner-small"></div>
+                            Signing in...
+                        </div>
+                    `;
+                    
+                    await authService.login(e.target.email.value, e.target.password.value);
+                    this.user = authService.getCurrentUser();
+                    
+                    // Show success toast
+                    toast.success('Welcome back! Redirecting to dashboard...');
+                    
+                    // Redirect to dashboard after short delay
+                    setTimeout(() => {
+                        this.currentPage = 'dashboard';
+                        this.render();
+                    }, 800);
+                } catch (error) {
+                    // Show error toast
+                    toast.error(error.message || 'Login failed. Please try again.');
+                    
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
             });
         }
 
@@ -485,10 +470,38 @@ class App {
         if (signupForm) {
             signupForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await authService.signup(e.target.name.value, e.target.email.value, e.target.password.value);
-                this.user = authService.currentUser;
-                this.currentPage = 'dashboard';
-                this.render();
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                try {
+                    // Show loader
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div class="spinner-small"></div>
+                            Creating account...
+                        </div>
+                    `;
+                    
+                    await authService.signup(e.target.name.value, e.target.email.value, e.target.password.value);
+                    this.user = authService.getCurrentUser();
+                    
+                    // Show success toast
+                    toast.success('Account created successfully! Redirecting...');
+                    
+                    // Redirect to dashboard after short delay
+                    setTimeout(() => {
+                        this.currentPage = 'dashboard';
+                        this.render();
+                    }, 800);
+                } catch (error) {
+                    // Show error toast
+                    toast.error(error.message || 'Signup failed. Please try again.');
+                    
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
             });
         }
 
@@ -581,20 +594,13 @@ class App {
 
     async loadCategories() {
         try {
-            const token = authService.getToken();
             let dbCategories = [];
             
-            // Try to fetch from API, but don't fail if it's not available
+            // Fetch from Supabase
             try {
-                const response = await fetch('/api/categories', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    dbCategories = await response.json();
-                }
-            } catch (apiError) {
-                console.warn('API not available, using localStorage only:', apiError.message);
+                dbCategories = await linkManager.getCategories();
+            } catch (err) {
+                console.warn('Failed to fetch categories from Supabase:', err);
             }
             
             // Get custom categories from localStorage

@@ -1,4 +1,5 @@
 import authService from './authService.js';
+import linkManager from './linkManager.js';
 
 class Analytics {
     async getFullReport() {
@@ -6,12 +7,7 @@ class Analytics {
             const token = authService.getToken();
             if (!token) return null;
 
-            const response = await fetch('/api/stats', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (!response.ok) return null;
-            return await response.json();
+            return await linkManager.getStats();
         } catch (error) {
             console.error('Analytics error:', error);
             return null;
