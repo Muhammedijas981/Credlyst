@@ -1032,12 +1032,12 @@ class App {
                 <div class="card-header">
                     <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${domain}" class="link-favicon" onerror="this.src='https://www.google.com/s2/favicons?domain=example.com&sz=64'">
                     <div class="actions">
-                        <button class="btn-icon-sm favorite-btn ${link.favorite ? 'active' : ''}" onclick="app.toggleFavorite(${link.id}, ${!link.favorite})" title="${link.favorite ? 'Remove from favorites' : 'Add to favorites'}">
+                        <button class="btn-icon-sm favorite-btn ${link.favorite ? 'active' : ''}" onclick="app.toggleFavorite('${link.id}', ${!link.favorite})" title="${link.favorite ? 'Remove from favorites' : 'Add to favorites'}">
                             ${iconStar}
                         </button>
                         <button class="btn-icon-sm" onclick="window.open('${link.url}', '_blank')" title="Open Link">${iconExternal}</button>
-                        <button class="btn-icon-sm" onclick="app.showEditLinkModal(${link.id})" title="Edit Link">${iconEdit}</button>
-                        <button class="btn-icon-sm danger" onclick="app.deleteLink(${link.id})">${iconTrash}</button>
+                        <button class="btn-icon-sm" onclick="app.showEditLinkModal('${link.id}')" title="Edit Link">${iconEdit}</button>
+                        <button class="btn-icon-sm danger" onclick="app.deleteLink('${link.id}')">${iconTrash}</button>
                     </div>
                 </div>
                 <h3 class="link-title">${link.title}</h3>
