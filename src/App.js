@@ -9,6 +9,12 @@ class App {
         this.currentView = 'all'; // all, favorites, recent, or category:{name}
         this.theme = localStorage.getItem('theme') || 'light';
         this.user = authService.currentUser || { name: 'Sarah D.', plan: 'Free Plan' };
+        this.accounts = authService.accounts.length > 0 ? authService.accounts : [
+            this.user,
+            { name: 'Work Profile', plan: 'Pro Plan' },
+            { name: 'Personal Dev', plan: 'Hacker Plan' }
+        ];
+        this.currentAccountIndex = 0;
         this.categories = [];
     }
 
@@ -19,6 +25,7 @@ class App {
             if (authService.isAuthenticated) {
                 this.currentPage = 'dashboard';
                 this.user = authService.getCurrentUser();
+                this.accounts = authService.accounts;
             }
 
             this.applyTheme();
@@ -302,6 +309,11 @@ class App {
                                     <span class="user-plan">Free Plan</span>
                                 </div>
                             </div>
+                            <div style="margin: 0.5rem 0; width: 100%; border-top: 1px solid var(--border-color); opacity: 0.5;"></div>
+                            <button class="btn-block btn-outline" style="margin-bottom: 0.5rem; font-size: 0.85rem; padding: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 4px;" data-action="add-account">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add another account
+                            </button>
                             <a href="#" class="logout-link" id="logout-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -337,6 +349,12 @@ class App {
                                     </div>
                                 </div>
                                 <div class="dropdown-divider"></div>
+                                <button class="dropdown-item" data-action="add-account">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    Add another account
+                                </button>
                                 <button id="mobile-logout-btn" class="dropdown-item danger">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -420,6 +438,12 @@ class App {
             }
             if (action === 'nav-signup') {
                 this.currentPage = 'signup';
+                this.render();
+            }
+            if (action === 'add-account') {
+                this.currentPage = 'login';
+                document.getElementById('mobile-profile-dropdown')?.classList.add('hidden');
+                document.getElementById('profile-overlay')?.classList.add('hidden');
                 this.render();
             }
         });
@@ -513,13 +537,17 @@ class App {
             document.getElementById('logout-btn')?.addEventListener('click', () => {
                 authService.logout();
             });
-            
             // Add Link (Desktop)
             document.getElementById('add-link-btn')?.addEventListener('click', () => this.showAddLinkModal());
             
             // Mobile FAB
             document.getElementById('mobile-add-btn')?.addEventListener('click', () => this.showAddLinkModal());
             
+            // Gmail-like Account Switcher — attached only to avatar elements
+            // Use rAF so avatar dimensions are available (post-layout)
+            requestAnimationFrame(() => this._setupAccountSwiper());
+
+
             // Mobile Profile Dropdown Toggle
             const mobileProfileToggle = document.getElementById('mobile-profile-toggle');
             const mobileProfileDropdown = document.getElementById('mobile-profile-dropdown');
@@ -590,6 +618,163 @@ class App {
         await this.loadCategories();
         // Load links based on current view
         await this.loadView();
+    }
+
+    _setupAccountSwiper() {
+        if (this.accounts.length <= 1) return; // Nothing to swipe if single account
+
+        // For each avatar element in the DOM, we wrap it to clip overflow and attach swipe
+        const avatarEls = document.querySelectorAll('.avatar, .avatar-sm');
+        
+        avatarEls.forEach(avatarEl => {
+            // Wrap avatar in a clip wrapper if not already wrapped
+            if (!avatarEl.parentElement.classList.contains('avatar-swipe-wrapper')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'avatar-swipe-wrapper';
+                wrapper.style.cssText = `
+                    overflow: hidden;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    width: ${avatarEl.offsetWidth || 36}px;
+                    height: ${avatarEl.offsetHeight || 36}px;
+                    position: relative;
+                    cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                `;
+                avatarEl.parentElement.insertBefore(wrapper, avatarEl);
+                wrapper.appendChild(avatarEl);
+            }
+
+            const wrapper = avatarEl.parentElement;
+
+            let startY = 0;
+            let isDragging = false;
+            let hasSwiped = false; // Track if an actual swipe happened (vs just a tap)
+            let isAnimating = false;
+
+            const doSwitch = async (direction) => {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                const slideOut = direction > 0 ? '-110%' : '110%';
+                const slideIn  = direction > 0 ?  '110%' : '-110%';
+
+                // Animate out
+                avatarEl.style.transition = 'transform 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease';
+                avatarEl.style.transform  = `translateY(${slideOut})`;
+                avatarEl.style.opacity    = '0';
+
+                // Compute next index
+                const nextIndex = direction > 0
+                    ? (this.currentAccountIndex + 1) % this.accounts.length
+                    : (this.currentAccountIndex - 1 + this.accounts.length) % this.accounts.length;
+
+                const targetAccount = this.accounts[nextIndex];
+
+                // Switch backend session
+                if (authService.isAuthenticated && targetAccount.access_token) {
+                    try {
+                        await authService.switchAccount(targetAccount);
+                        this.user = authService.getCurrentUser();
+                        this.accounts = authService.accounts;
+                        this.currentAccountIndex = 0;
+                    } catch (err) {
+                        console.error('Account switch failed:', err);
+                        toast.error('Could not switch account — session may have expired.');
+                        avatarEl.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
+                        avatarEl.style.transform  = 'translateY(0)';
+                        avatarEl.style.opacity    = '1';
+                        isAnimating = false;
+                        return;
+                    }
+                } else {
+                    this.user = targetAccount;
+                    this.currentAccountIndex = nextIndex;
+                }
+
+                // Update all name/plan/email text across the whole page
+                const name  = this.user.name  || 'User';
+                const plan  = this.user.plan  || 'Free Plan';
+                const email = this.user.email || '';
+                const initial = name.charAt(0).toUpperCase();
+
+                document.querySelectorAll('.avatar, .avatar-md, .avatar-sm').forEach(el => el.textContent = initial);
+                document.querySelectorAll('.user-name, .dropdown-name').forEach(el => el.textContent = name);
+                document.querySelectorAll('.user-plan, .dropdown-plan').forEach(el => el.textContent = plan);
+                document.querySelectorAll('.user-email').forEach(el => el.textContent = email);
+
+                // Position new content below/above ready to slide in
+                avatarEl.style.transition  = 'none';
+                avatarEl.style.transform   = `translateY(${slideIn})`;
+                avatarEl.style.opacity     = '0';
+                void avatarEl.offsetWidth;  // force reflow
+
+                // Animate in with a spring bounce
+                avatarEl.style.transition = 'transform 0.32s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.28s ease';
+                avatarEl.style.transform  = 'translateY(0)';
+                avatarEl.style.opacity    = '1';
+
+                toast.info(`↔ Switched to ${name}`);
+
+                // Reload data for the new account
+                await this.hydrateDashboard();
+
+                setTimeout(() => { isAnimating = false; startY = 0; }, 350);
+            };
+
+            // --- Touch ---
+            wrapper.addEventListener('touchstart', (e) => {
+                if (isAnimating) return;
+                startY = e.touches[0].clientY;
+                hasSwiped = false;
+                isDragging = false;
+            }, { passive: true });
+
+            wrapper.addEventListener('touchmove', (e) => {
+                if (isAnimating || !startY) return;
+                isDragging = true;
+            }, { passive: true });
+
+            wrapper.addEventListener('touchend', (e) => {
+                if (isAnimating || !startY) return;
+                const endY  = e.changedTouches[0].clientY;
+                const diffY = startY - endY;
+                if (Math.abs(diffY) > 40) {
+                    hasSwiped = true;
+                    doSwitch(diffY > 0 ? 1 : -1);
+                }
+                startY = 0;
+                isDragging = false;
+            }, { passive: true });
+
+            // --- Mouse (desktop) ---
+            let mouseMoved = false;
+            wrapper.addEventListener('mousedown', (e) => {
+                if (isAnimating) return;
+                startY = e.clientY;
+                mouseMoved = false;
+                wrapper.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!startY || isAnimating) return;
+                if (Math.abs(startY - e.clientY) > 5) mouseMoved = true;
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (!startY || isAnimating) { startY = 0; wrapper.style.cursor = 'grab'; return; }
+                const diffY = startY - e.clientY;
+                if (mouseMoved && Math.abs(diffY) > 40) {
+                    doSwitch(diffY > 0 ? 1 : -1);
+                }
+                startY = 0;
+                mouseMoved = false;
+                wrapper.style.cursor = 'grab';
+            });
+        });
     }
 
     async loadCategories() {
@@ -1056,6 +1241,9 @@ class App {
     }
     
     async showAddLinkModal() {
+        // ALWAYS load categories before building dropdown to reflect newly added categories
+        await this.loadCategories();
+
         // Build category dropdown options
         const categoryOptions = this.categories.map(cat => 
             `<option value="${cat.category}">${cat.category}</option>`
