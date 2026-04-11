@@ -10,7 +10,7 @@ class Toast {
             this.container.id = 'glass-toast-container';
             this.container.style.cssText = `
                 position: fixed;
-                bottom: 40px;
+                top: 24px;
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 99999;
@@ -18,18 +18,20 @@ class Toast {
                 flex-direction: column;
                 gap: 12px;
                 pointer-events: none;
+                width: max-content;
+                max-width: calc(100vw - 32px);
             `;
             document.body.appendChild(this.container);
             
             const style = document.createElement('style');
             style.textContent = `
-                @keyframes slideUpFade {
-                    0% { transform: translateY(20px) scale(0.95); opacity: 0; }
+                @keyframes slideDownFade {
+                    0% { transform: translateY(-20px) scale(0.95); opacity: 0; }
                     100% { transform: translateY(0) scale(1); opacity: 1; }
                 }
-                @keyframes fadeOutDown {
+                @keyframes fadeOutUp {
                     0% { transform: translateY(0) scale(1); opacity: 1; }
-                    100% { transform: translateY(20px) scale(0.95); opacity: 0; }
+                    100% { transform: translateY(-20px) scale(0.95); opacity: 0; }
                 }
                 .glass-toast {
                     background: rgba(255, 255, 255, 0.85);
@@ -38,17 +40,19 @@ class Toast {
                     border: 1px solid rgba(255, 255, 255, 0.4);
                     box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
                     color: #1f2937;
-                    padding: 12px 24px 12px 16px;
-                    border-radius: 9999px;
+                    padding: 12px 16px;
+                    border-radius: 16px;
                     display: flex;
-                    align-items: center;
+                    align-items: flex-start;
                     gap: 12px;
                     font-size: 14.5px;
                     font-weight: 500;
+                    line-height: 1.5;
                     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    animation: slideDownFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                     pointer-events: auto;
                     transition: all 0.3s ease;
+                    word-break: break-word;
                 }
                 [data-theme="dark"] .glass-toast {
                     background: rgba(30, 30, 30, 0.85);
@@ -63,6 +67,7 @@ class Toast {
                     width: 28px;
                     height: 28px;
                     border-radius: 50%;
+                    flex-shrink: 0;
                 }
                 .toast-success .glass-toast-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; }
                 .toast-error .glass-toast-icon { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
@@ -85,7 +90,7 @@ class Toast {
         this.container.prepend(toast);
 
         setTimeout(() => {
-            toast.style.animation = 'fadeOutDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+            toast.style.animation = 'fadeOutUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
             setTimeout(() => toast.remove(), 300);
         }, 3500);
     }

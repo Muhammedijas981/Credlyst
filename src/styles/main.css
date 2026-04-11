@@ -1442,17 +1442,17 @@ select option:hover {
 
 .auth-card {
     background: white;
-    padding: 3rem;
+    padding: 2.5rem 2rem;
     border-radius: var(--radius-lg);
     box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.05);
     width: 100%;
-    max-width: 440px;
+    max-width: 380px;
     border: 1px solid var(--border-color);
 }
 
 .auth-header {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .auth-header h2 {
@@ -1467,8 +1467,8 @@ select option:hover {
 
 .auth-footer {
     text-align: center;
-    margin-top: 2rem;
-    padding-top: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
     border-top: 1px solid var(--border-color);
 }
 
@@ -2203,13 +2203,21 @@ select option:hover {
         min-height: 44px;
     }
     
-    /* Mobile auth pages */
     .auth-page {
         padding: 1rem;
     }
     
     .auth-card {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 1.25rem;
+        border-radius: var(--radius-md);
+    }
+    
+    .auth-header {
+        margin-bottom: 1.75rem !important;
+    }
+
+    .auth-header h2 {
+        font-size: 1.5rem !important;
     }
 }
 

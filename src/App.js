@@ -26,6 +26,8 @@ class App {
                 this.currentPage = 'dashboard';
                 this.user = authService.getCurrentUser();
                 this.accounts = authService.accounts;
+            } else if (window.innerWidth <= 768) {
+                this.currentPage = 'login';
             }
 
             this.applyTheme();
@@ -196,19 +198,19 @@ class App {
         return `
             <div class="auth-page">
                 <div class="auth-card">
-
-                    <div class="auth-header">
+                    <div class="auth-header" style="text-align: center;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
                         <h2>Welcome back</h2>
                         <p>Please enter your details to sign in.</p>
                     </div>
                     <form id="login-form">
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" name="email" required placeholder="name@company.com" value="demo@credlyst.com">
+                            <input type="email" name="email" required placeholder="name@company.com">
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="password" name="password" required placeholder="••••••••" value="password123">
+                            <input type="password" name="password" required placeholder="••••••••">
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Sign in</button>
                     </form>
@@ -224,14 +226,15 @@ class App {
         return `
             <div class="auth-page">
                 <div class="auth-card">
-                    <div class="auth-header">
+                    <div class="auth-header" style="text-align: center;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
                         <h2>Create an account</h2>
                         <p>Start organizing your links today.</p>
                     </div>
                     <form id="signup-form">
                          <div class="form-group">
                             <label>Full Name</label>
-                            <input type="text" name="name" required placeholder="Sarah Doe">
+                            <input type="text" name="name" required placeholder="e.g. John Doe">
                         </div>
                         <div class="form-group">
                             <label>Email</label>
@@ -845,9 +848,21 @@ class App {
                 title = 'Favorites';
                 this.renderLinksList(links);
             } else if (this.currentView === 'recent') {
-                links = await linkManager.getAllLinks();
-                links = links.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 20);
-                title = 'Recent';
+                const allLinks = await linkManager.getAllLinks();
+                
+                // Industry standard: "Recent" means within a certain time window (e.g. 7 days)
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                
+                links = allLinks
+                    .filter(link => {
+                        const actionDate = new Date(link.updated_at || link.created_at);
+                        return actionDate >= sevenDaysAgo;
+                    })
+                    .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+                    .slice(0, 12); // max 12 items
+                    
+                title = 'Recent (Last 7 Days)';
                 this.renderLinksList(links);
             } else if (this.currentView === 'categories-page') {
                 title = 'Categories';
@@ -894,7 +909,40 @@ class App {
         if (!container) return;
 
         if (links.length === 0) {
-            container.innerHTML = `<div class="empty-state"><p>No links found.</p></div>`;
+            container.innerHTML = `
+                <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; grid-column: 1 / -1; min-height: 40vh;">
+                    <style>
+                        @keyframes floatCat { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+                        @keyframes zzzFly { 0% { opacity: 0; transform: translate(0, 0) scale(0.5); } 50% { opacity: 0.7; transform: translate(15px, -20px) scale(1); } 100% { opacity: 0; transform: translate(30px, -40px) scale(1.2); } }
+                    </style>
+                    <svg width="180" height="180" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #cbd5e1; margin-bottom: 1.5rem; animation: floatCat 6s ease-in-out infinite;">
+                        <!-- Sleeping Anime Cat SVG Outline -->
+                        <g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Cat Body -->
+                            <path d="M 120 280 C 120 180, 280 180, 280 280" fill="none" stroke-width="12" />
+                            <!-- Ears -->
+                            <path d="M 130 200 L 105 110 L 175 160" fill="none" stroke-width="10" />
+                            <path d="M 270 200 L 295 110 L 225 160" fill="none" stroke-width="10" />
+                            <!-- Closed Eyes -->
+                            <path d="M 150 220 Q 165 235 180 220" fill="none" stroke-width="8" />
+                            <path d="M 220 220 Q 235 235 250 220" fill="none" stroke-width="8" />
+                            <!-- Cute Nose -->
+                            <circle cx="200" cy="245" r="5" fill="currentColor" />
+                            <!-- Mouth -->
+                            <path d="M 185 255 Q 200 270 215 255" fill="none" stroke-width="6" />
+                            <!-- Tail -->
+                            <path d="M 275 260 Q 330 260 330 220 Q 330 180 300 180 Q 285 180 285 200" fill="none" stroke-width="10" />
+                            
+                            <!-- Zzz Animations -->
+                            <path d="M 260 80 L 290 80 L 260 110 L 290 110" stroke-width="8" opacity="0" style="animation: zzzFly 3.5s infinite linear;" />
+                            <path d="M 300 50 L 320 50 L 300 70 L 320 70" stroke-width="6" opacity="0" style="animation: zzzFly 3.5s infinite linear 1.2s;" />
+                            <path d="M 330 20 L 345 20 L 330 35 L 345 35" stroke-width="4" opacity="0" style="animation: zzzFly 3.5s infinite linear 2.4s;" />
+                        </g>
+                    </svg>
+                    <h3 style="font-size: 1.4rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Nothing found here!</h3>
+                    <p style="color: var(--text-secondary); max-width: 320px; text-align: center; font-size: 0.95rem; line-height: 1.5;">Looks like our database cat is taking a nap. Try searching for something else or add some new links!</p>
+                </div>
+            `;
             return;
         }
         
