@@ -1,6 +1,6 @@
 # Credlyst 🔗
 
-A beautiful, privacy-focused link management web application with local SQL database storage.
+A beautiful, privacy-focused link management web application with seamless cloud synchronisation powered by Supabase.
 
 ![Credlyst](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -8,13 +8,12 @@ A beautiful, privacy-focused link management web application with local SQL data
 ## ✨ Features
 
 - 🔗 **Save Links** - Add your frequently used URLs to a centralized list
-- 🔍 **Full-Text Search** - Quickly find links using SQLite FTS5 search
+- ☁️ **Cloud Sync** - Seamless cross-device synchronisation with Supabase
+- 🔒 **Secure Authentication** - Personalised and secure user accounts
+- 🔍 **Full-Text Search** - Quickly find links by title, URL, description, or keyword
 - ✏️ **Edit/Delete Links** - Manage your saved links with ease
 - 🌙 **Dark Mode** - Beautiful UI with dark mode support
 - 📱 **Mobile Responsive** - Optimized for use on any device
-- 🔒 **100% Privacy** - All data stays on your device (IndexedDB)
-- ⚡ **Lightning Fast** - No server latency, instant search
-- 💾 **Offline First** - Works completely offline
 - 🏷️ **Tags & Categories** - Organize links your way
 - ⭐ **Favorites** - Quick access to your most important links
 
@@ -23,12 +22,16 @@ A beautiful, privacy-focused link management web application with local SQL data
 ### Prerequisites
 
 - Node.js 18+ and npm
+- A [Supabase](https://supabase.com/) project (for the database and authentication)
 
 ### Installation
 
 ```bash
 # Install dependencies
 npm install
+
+# Setup environment variables (add your Supabase credentials)
+# Create a .env file and supply your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 
 # Start development server
 npm run dev
@@ -43,8 +46,8 @@ npm run preview
 ## 🛠️ Technology Stack
 
 - **Frontend**: Vanilla JavaScript
-- **Database**: SQL.js (SQLite in JavaScript)
-- **Storage**: IndexedDB for persistence
+- **Backend & Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
 - **Build Tool**: Vite
 - **Styling**: CSS3 with CSS Variables
 - **Icons**: Lucide Icons (via SVG)
@@ -54,17 +57,25 @@ npm run preview
 ```
 credlyst/
 ├── src/
-│   ├── components/       # UI Components (future)
-│   ├── pages/           # Page Components (future)
+│   ├── config/          # Configuration
+│   │   └── constants.js
+│   ├── lib/             # Third-party libraries
+│   │   └── supabase.js
 │   ├── services/        # Business Logic
-│   │   ├── database.js
+│   │   ├── analytics.js
+│   │   ├── authService.js
 │   │   ├── linkManager.js
-│   │   └── searchEngine.js
+│   │   ├── searchEngine.js
+│   │   └── tagManager.js
 │   ├── styles/          # CSS Styles
 │   │   ├── variables.css
 │   │   └── main.css
-│   ├── config/          # Configuration
-│   │   └── schema.sql
+│   ├── utils/           # Utility functions
+│   │   ├── formatters.js
+│   │   ├── helpers.js
+│   │   ├── sanitizers.js
+│   │   ├── toast.js
+│   │   └── validators.js
 │   ├── App.js           # Main app component
 │   └── main.js          # Entry point
 ├── index.html
@@ -74,11 +85,14 @@ credlyst/
 
 ## 💡 Usage
 
+### Authentication
+- Register an account or log in securely to synchronise your links.
+
 ### Adding a Link
 
 1. Click the "Add Link" button in the navbar
 2. Fill in the link details (title, URL, description, keywords, category)
-3. Click "Add Link" to save
+3. Click "Add Link" to save directly to the cloud
 
 ### Searching Links
 
@@ -96,67 +110,19 @@ credlyst/
 
 ### Database Schema
 
-Credlyst uses SQLite (via SQL.js) with the following tables:
+Credlyst uses Supabase (PostgreSQL) with a `links` table containing the following fields:
 
-- **links** - Stores link information
-- **tags** - Tag definitions
-- **link_tags** - Many-to-many relationship between links and tags
-- **link_history** - Track link usage
-- **settings** - App settings
-
-### Full-Text Search
-
-Uses SQLite FTS5 (Full-Text Search) for blazing fast search across:
-- Link titles
-- URLs
-- Descriptions
-- Keywords
-
-### Privacy & Data
-
-- **100% Local** - All data stored in browser's IndexedDB
-- **No Tracking** - No analytics or external requests
-- **No Account Required** - No sign-up, no login
-- **Portable** - Export/import your data anytime (coming soon)
-
-## 🗺️ Roadmap
-
-### Version 1.1
-- [ ] Import/Export functionality
-- [ ] Link editing
-- [ ] Bulk operations
-- [ ] Analytics dashboard
-
-### Version 1.2
-- [ ] Tag management UI
-- [ ] Category management
-- [ ] Link preview with metadata
-- [ ] Keyboard shortcuts
-
-### Version 2.0
-- [ ] Browser extension
-- [ ] Cloud sync (optional)
-- [ ] Collaboration features
-- [ ] Mobile app
-
-## 🤝 Contributing
+- **id** - Unique identifier
+- **user_id** - Foreign key to Supabase Auth
+- **title** - Title of the link
+- **url** - The URL string
+- **description** - Optional description
+- **keywords** - Optional keywords for searching
+- **category** - Link category
+- **favorite** - Boolean favorite status
+- **created_at** - Creation timestamp
+- **updated_at** - Last update timestamp
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 👨‍💻 Author
-
-Built with ❤️ by [Your Name]
-
-## 🙏 Acknowledgments
-
-- SQL.js for bringing SQLite to the browser
-- Vite for the amazing build tool
-- The open-source community
-
----
 
 **Credlyst** - Manage your links, effortlessly.
