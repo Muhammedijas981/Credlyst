@@ -1,0 +1,504 @@
+/* Credlyst Extension — Finder + Content Script Styles */
+/* Injected into every page via content_scripts.css */
+
+/* ── Reset scope ── */
+#credlyst-overlay,
+#credlyst-finder,
+#credlyst-toast {
+    all: initial;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+#credlyst-overlay *,
+#credlyst-finder * {
+    box-sizing: border-box;
+}
+
+/* ── Overlay ── */
+#credlyst-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    z-index: 2147483646 !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    opacity: 0 !important;
+    transition: opacity 0.18s ease !important;
+    display: block !important;
+}
+
+#credlyst-overlay.credlyst-visible {
+    opacity: 1 !important;
+}
+
+/* ── Finder & Saver container ── */
+#credlyst-finder,
+#credlyst-saver {
+    position: fixed !important;
+    top: 15vh !important;
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.96) !important;
+    width: 640px !important;
+    max-width: calc(100vw - 32px) !important;
+    max-height: 520px !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        0 8px 16px rgba(0, 0, 0, 0.08),
+        0 24px 64px rgba(0, 0, 0, 0.16) !important;
+    z-index: 2147483647 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    transition:
+        opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#credlyst-saver {
+    width: 480px !important;
+}
+
+#credlyst-finder.credlyst-visible,
+#credlyst-saver.credlyst-visible {
+    opacity: 1 !important;
+    transform: translateX(-50%) scale(1) !important;
+}
+
+/* ── Dark mode ── */
+@media (prefers-color-scheme: dark) {
+    #credlyst-finder,
+    #credlyst-saver {
+        background: #1c1c1e !important;
+        box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            0 8px 16px rgba(0, 0, 0, 0.3),
+            0 24px 64px rgba(0, 0, 0, 0.5) !important;
+    }
+}
+
+/* ── Saver Form ── */
+.credlyst-saver-body {
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#credlyst-saver-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+}
+
+.cs-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    flex: 1 !important;
+}
+
+.cs-row {
+    display: flex !important;
+    gap: 14px !important;
+    align-items: flex-end !important;
+}
+
+.cs-group-checkbox {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: 38px !important;
+    padding: 0 10px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background: #f9fafb !important;
+    cursor: pointer !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .cs-group-checkbox {
+        border-color: rgba(255,255,255,0.1) !important;
+        background: #2c2c2e !important;
+    }
+}
+
+#credlyst-saver-form label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #4b5563 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    #credlyst-saver-form label { color: #9ca3af !important; }
+}
+
+#credlyst-saver-form input[type="text"],
+#credlyst-saver-form input[type="url"],
+#credlyst-saver-form textarea {
+    all: unset !important;
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+    background: #fff !important;
+    line-height: 1.4 !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    #credlyst-saver-form input[type="text"],
+    #credlyst-saver-form input[type="url"],
+    #credlyst-saver-form textarea {
+        background: #2c2c2e !important;
+        border-color: rgba(255,255,255,0.1) !important;
+        color: #f9fafb !important;
+    }
+}
+
+#credlyst-saver-form input:focus,
+#credlyst-saver-form textarea:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+
+#credlyst-saver-form textarea {
+    resize: none !important;
+}
+
+.cs-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin-top: 6px !important;
+}
+
+#cs-submit {
+    all: unset !important;
+    background: #2563eb !important;
+    color: #fff !important;
+    padding: 10px 18px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background 0.15s !important;
+}
+
+#cs-submit:hover {
+    background: #1d4ed8 !important;
+}
+#cs-submit:disabled {
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+}
+
+/* ── Header ── */
+.credlyst-header {
+    padding: 12px 14px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07) !important;
+    flex-shrink: 0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .credlyst-header {
+        border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    }
+}
+
+.credlyst-search-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.credlyst-search-icon {
+    color: #9ca3af !important;
+    flex-shrink: 0 !important;
+}
+
+#credlyst-search {
+    all: unset !important;
+    flex: 1 !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    color: #111827 !important;
+    line-height: 1.5 !important;
+    caret-color: #2563eb !important;
+}
+
+#credlyst-search::placeholder {
+    color: #9ca3af !important;
+    font-weight: 400 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    #credlyst-search {
+        color: #f9fafb !important;
+    }
+}
+
+.credlyst-esc-hint {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #9ca3af !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 5px !important;
+    padding: 2px 7px !important;
+    flex-shrink: 0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .credlyst-esc-hint {
+        background: #2d2d2f !important;
+        border-color: #3f3f41 !important;
+        color: #6b7280 !important;
+    }
+}
+
+/* ── Results list ── */
+.credlyst-results {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-height: 80px !important;
+    max-height: 380px !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0,0,0,0.15) transparent !important;
+}
+
+/* ── Result item ── */
+.credlyst-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: background 0.1s ease !important;
+    user-select: none !important;
+}
+
+.credlyst-item:hover,
+.credlyst-item-selected {
+    background: #f0f4ff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .credlyst-item:hover,
+    .credlyst-item-selected {
+        background: #2563eb1a !important;
+    }
+}
+
+.credlyst-item-favicon {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+    background: #f3f4f6 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+}
+
+.credlyst-item-favicon img {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.credlyst-item-favicon-fallback {
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    background: #dbeafe !important;
+    border-radius: 8px !important;
+}
+
+.credlyst-item-body {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.credlyst-item-title {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #111827 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .credlyst-item-title {
+        color: #f9fafb !important;
+    }
+}
+
+.credlyst-star {
+    color: #f59e0b !important;
+    flex-shrink: 0 !important;
+}
+
+.credlyst-item-url {
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+}
+
+.credlyst-item-meta {
+    flex-shrink: 0 !important;
+}
+
+.credlyst-category {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border-radius: 6px !important;
+    padding: 2px 8px !important;
+    white-space: nowrap !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .credlyst-category {
+        background: #1e3a5f !important;
+        color: #93c5fd !important;
+    }
+}
+
+/* ── Empty / loading states ── */
+.credlyst-loading,
+.credlyst-empty {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 36px 20px !important;
+    gap: 10px !important;
+    color: #9ca3af !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+.credlyst-empty svg {
+    color: #d1d5db !important;
+}
+
+.credlyst-empty p {
+    margin: 0 !important;
+    font-weight: 500 !important;
+    color: #6b7280 !important;
+}
+
+.credlyst-empty small {
+    font-size: 12px !important;
+    color: #9ca3af !important;
+}
+
+.credlyst-spinner {
+    width: 24px !important;
+    height: 24px !important;
+    border: 3px solid #e5e7eb !important;
+    border-top-color: #2563eb !important;
+    border-radius: 50% !important;
+    animation: credlyst-spin 0.7s linear infinite !important;
+}
+
+@keyframes credlyst-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Footer ── */
+.credlyst-footer {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 8px 14px !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+    flex-shrink: 0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .credlyst-footer {
+        border-top-color: rgba(255, 255, 255, 0.07) !important;
+    }
+}
+
+.credlyst-hint {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11px !important;
+    color: #9ca3af !important;
+}
+
+.credlyst-hint kbd {
+    all: unset !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    color: #6b7280 !important;
+    font-family: inherit !important;
+}
+
+.credlyst-hint-sep {
+    flex: 1 !important;
+}
+
+.credlyst-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    opacity: 0.7 !important;
+}
+
+/* ── Toast ── */
+#credlyst-toast {
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(10px) !important;
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 10px 18px !important;
+    border-radius: 100px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+    z-index: 2147483647 !important;
+    opacity: 0 !important;
+    transition: opacity 0.25s ease, transform 0.25s ease !important;
+    pointer-events: none !important;
+    white-space: nowrap !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+#credlyst-toast.credlyst-toast-visible {
+    opacity: 1 !important;
+    transform: translateX(-50%) translateY(0) !important;
+}

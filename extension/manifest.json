@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Credlyst Quick Finder",
+  "version": "1.0.0",
+  "description": "Instantly search and auto-fill your saved Credlyst links on any website.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "Credlyst Quick Finder"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["finder/fuse.min.js", "content.js"],
+      "css": ["finder/finder.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "open-quick-finder": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
+      },
+      "description": "Open Credlyst Quick Finder"
+    },
+    "save-current-link": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Save Current Link to Credlyst"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}

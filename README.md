@@ -123,6 +123,14 @@ Credlyst uses Supabase (PostgreSQL) with a `links` table containing the followin
 - **created_at** - Creation timestamp
 - **updated_at** - Last update timestamp
 
+## 🧩 Browser Extension
+
+A full-featured Chrome browser extension is included in the `extension/` directory. 
+- Log in to your Credlyst account directly from the popup
+- Use `Ctrl+Shift+F` on any website to bring up the global quick-finder
+- Fuzzy-search through your saved links
+- Press `Enter` to instantly auto-fill the selected URL into your current input field
+
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 **Credlyst** - Manage your links, effortlessly.
