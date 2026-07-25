@@ -163,6 +163,7 @@ p {
     justify-content: center;
     gap: 0.5rem;
     padding: 0.65rem 1.25rem;
+    font-family: inherit;
     font-size: 0.9rem;
     font-weight: 600;
     border-radius: var(--radius-md);
@@ -883,17 +884,17 @@ select option:hover {
 }
 
 .logo-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
     object-fit: contain;
 }
 
 .logo-text {
-    font-weight: 600;
-    font-size: 1.125rem;
+    font-weight: 700;
+    font-size: 1.75rem;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
 }
 
 .nav-menu {

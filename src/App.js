@@ -1,81 +1,96 @@
-import linkManager from './services/linkManager.js';
-import searchEngine from './services/searchEngine.js';
-import authService from './services/authService.js';
-import toast from './utils/toast.js';
+import linkManager from "./services/linkManager.js";
+import searchEngine from "./services/searchEngine.js";
+import authService from "./services/authService.js";
+import toast from "./utils/toast.js";
 
 class App {
-    constructor() {
-        this.currentPage = 'landing';
-        this.currentView = 'all'; // all, favorites, recent, or category:{name}
-        this.theme = localStorage.getItem('theme') || 'light';
-        this.user = authService.currentUser || { name: 'Sarah D.', plan: 'Free Plan' };
-        this.accounts = authService.accounts.length > 0 ? authService.accounts : [
+  constructor() {
+    this.currentPage = "landing";
+    this.currentView = "all"; // all, favorites, recent, or category:{name}
+    this.theme = localStorage.getItem("theme") || "light";
+    this.user = authService.currentUser || {
+      name: "Sarah D.",
+      plan: "Free Plan",
+    };
+    this.accounts =
+      authService.accounts.length > 0
+        ? authService.accounts
+        : [
             this.user,
-            { name: 'Work Profile', plan: 'Pro Plan' },
-            { name: 'Personal Dev', plan: 'Hacker Plan' }
-        ];
-        this.currentAccountIndex = 0;
-        this.categories = [];
+            { name: "Work Profile", plan: "Pro Plan" },
+            { name: "Personal Dev", plan: "Hacker Plan" },
+          ];
+    this.currentAccountIndex = 0;
+    this.categories = [];
+  }
+
+  async init() {
+    try {
+      await authService.initPromise;
+      const recoveryState =
+        await authService.initializePasswordRecoveryFromUrl();
+
+      if (recoveryState?.shouldShowResetPage) {
+        this.currentPage = "reset-password";
+      } else if (authService.isAuthenticated) {
+        this.currentPage = "dashboard";
+        this.user = authService.getCurrentUser();
+        this.accounts = authService.accounts;
+      } else if (window.innerWidth <= 768) {
+        this.currentPage = "login";
+      }
+
+      this.applyTheme();
+      this.render();
+      this.hideLoading();
+      this.setupEventListeners();
+    } catch (error) {
+      console.error("App init failed:", error);
+      this.renderError(error);
+    }
+  }
+
+  hideLoading() {
+    const loading = document.getElementById("loading");
+    if (loading) loading.style.opacity = "0";
+    setTimeout(() => loading?.remove(), 300);
+  }
+
+  applyTheme() {
+    document.documentElement.setAttribute("data-theme", this.theme);
+  }
+
+  render() {
+    const app = document.getElementById("app");
+
+    switch (this.currentPage) {
+      case "landing":
+        app.innerHTML = this.renderLandingPage();
+        break;
+      case "login":
+        app.innerHTML = this.renderLoginPage();
+        break;
+      case "signup":
+        app.innerHTML = this.renderSignupPage();
+        break;
+      case "forgot-password":
+        app.innerHTML = this.renderForgotPasswordPage();
+        break;
+      case "reset-password":
+        app.innerHTML = this.renderResetPasswordPage();
+        break;
+      case "dashboard":
+        app.innerHTML = this.renderDashboard();
+        break;
     }
 
-    async init() {
-        try {
-            await authService.initPromise;
-            
-            if (authService.isAuthenticated) {
-                this.currentPage = 'dashboard';
-                this.user = authService.getCurrentUser();
-                this.accounts = authService.accounts;
-            } else if (window.innerWidth <= 768) {
-                this.currentPage = 'login';
-            }
+    this.setupDynamicListeners();
+  }
 
-            this.applyTheme();
-            this.render();
-            this.hideLoading();
-            this.setupEventListeners();
+  // --- VIEW RENDERERS ---
 
-        } catch (error) {
-            console.error('App init failed:', error);
-            this.renderError(error);
-        }
-    }
-
-    hideLoading() {
-        const loading = document.getElementById('loading');
-        if (loading) loading.style.opacity = '0';
-        setTimeout(() => loading?.remove(), 300);
-    }
-
-    applyTheme() {
-        document.documentElement.setAttribute('data-theme', this.theme);
-    }
-
-    render() {
-        const app = document.getElementById('app');
-        
-        switch (this.currentPage) {
-            case 'landing':
-                app.innerHTML = this.renderLandingPage();
-                break;
-            case 'login':
-                app.innerHTML = this.renderLoginPage();
-                break;
-            case 'signup':
-                app.innerHTML = this.renderSignupPage();
-                break;
-            case 'dashboard':
-                app.innerHTML = this.renderDashboard();
-                break;
-        }
-
-        this.setupDynamicListeners();
-    }
-
-    // --- VIEW RENDERERS ---
-
-    renderLandingPage() {
-        return `
+  renderLandingPage() {
+    return `
             <div class="landing-page">
                 <!-- Header -->
                 <header class="landing-header">
@@ -192,10 +207,10 @@ class App {
                 </footer>
             </div>
         `;
-    }
+  }
 
-    renderLoginPage() {
-        return `
+  renderLoginPage() {
+    return `
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
@@ -214,16 +229,17 @@ class App {
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Sign in</button>
                     </form>
-                    <div class="auth-footer">
+                    <div class="auth-footer" style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.75rem;">
+                        <button type="button" class="btn-link" data-action="nav-forgot-password">Forgot password?</button>
                         <span class="btn-link" data-action="nav-signup">Don't have an account? Sign up</span>
                     </div>
                 </div>
             </div>
         `;
-    }
+  }
 
-    renderSignupPage() {
-        return `
+  renderSignupPage() {
+    return `
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
@@ -252,28 +268,84 @@ class App {
                 </div>
             </div>
         `;
-    }
+  }
 
-    renderDashboard() {
-        // SVG Icons
-        const iconDashboard = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
-        const iconHeart = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
-        const iconClock = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
-        const iconSettings = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
-        const iconSearch = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
-        const iconMenu = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
-        const iconPlus = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-        const iconUser = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-        const iconCategory = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>`;
+  renderForgotPasswordPage() {
+    return `
+            <div class="auth-page">
+                <div class="auth-card">
+                    <div class="auth-header" style="text-align: center;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
+                        <h2>Reset your password</h2>
+                        <p>Enter the email linked to your account and we’ll send a recovery link.</p>
+                    </div>
+                    <form id="forgot-password-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required placeholder="name@company.com">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Send reset link</button>
+                    </form>
+                    <div class="auth-footer">
+                        <span class="btn-link" data-action="nav-login">Back to sign in</span>
+                    </div>
+                </div>
+            </div>
+        `;
+  }
 
-        // Dynamic categories list
-        const categoriesHTML = this.categories.map(cat => `
+  renderResetPasswordPage() {
+    return `
+            <div class="auth-page">
+                <div class="auth-card">
+                    <div class="auth-header" style="text-align: center;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
+                        <h2>Choose a new password</h2>
+                        <p>Use the link from your email and set a new password below.</p>
+                    </div>
+                    <form id="reset-password-form">
+                        <div class="form-group">
+                            <label>New password</label>
+                            <input type="password" name="password" required placeholder="••••••••">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm password</label>
+                            <input type="password" name="confirmPassword" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Update password</button>
+                    </form>
+                    <div class="auth-footer">
+                        <span class="btn-link" data-action="nav-login">Back to sign in</span>
+                    </div>
+                </div>
+            </div>
+        `;
+  }
+
+  renderDashboard() {
+    // SVG Icons
+    const iconDashboard = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
+    const iconHeart = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    const iconClock = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+    const iconSettings = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+    const iconSearch = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+    const iconMenu = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+    const iconPlus = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+    const iconUser = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+    const iconCategory = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>`;
+
+    // Dynamic categories list
+    const categoriesHTML = this.categories
+      .map(
+        (cat) => `
             <a href="#" class="nav-item tag-item" data-category="${cat.category}">
                 <span>#</span> ${cat.category} <small>(${cat.count})</small>
             </a>
-        `).join('');
+        `,
+      )
+      .join("");
 
-        return `
+    return `
             <div class="dashboard-wrapper">
                 <!-- SIDEBAR -->
                 <aside class="sidebar" id="sidebar">
@@ -284,21 +356,25 @@ class App {
                         </div>
                         
                         <nav class="nav-menu">
-                            <a href="#" class="nav-item ${this.currentView === 'all' ? 'active' : ''}" data-view="all">
+                            <a href="#" class="nav-item ${this.currentView === "all" ? "active" : ""}" data-view="all">
                                 ${iconDashboard}
                                 <span>All Links</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === 'favorites' ? 'active' : ''}" data-view="favorites">
+                            <a href="#" class="nav-item ${this.currentView === "favorites" ? "active" : ""}" data-view="favorites">
                                 ${iconHeart}
                                 <span>Favorites</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === 'recent' ? 'active' : ''}" data-view="recent">
+                            <a href="#" class="nav-item ${this.currentView === "recent" ? "active" : ""}" data-view="recent">
                                 ${iconClock}
                                 <span>Recent</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === 'categories-page' ? 'active' : ''}" data-view="categories-page">
+                            <a href="#" class="nav-item ${this.currentView === "categories-page" ? "active" : ""}" data-view="categories-page">
                                 ${iconCategory}
                                 <span>Categories</span>
+                            </a>
+                            <a href="#" class="nav-item ${this.currentView === "settings" ? "active" : ""}" data-view="settings">
+                                ${iconSettings}
+                                <span>Settings</span>
                             </a>
                         </nav>
                     </div>
@@ -376,7 +452,10 @@ class App {
                             ${iconSearch}
                             <input type="text" id="global-search" placeholder="Search links...">
                         </div>
-                        <button class="btn btn-primary" id="add-link-btn">+ Add New Link</button>
+                        <button class="btn btn-primary" id="add-link-btn" style="font-weight: 500;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            New Link
+                        </button>
                     </header>
 
                     <div class="content-scroll">
@@ -393,21 +472,25 @@ class App {
                 <!-- MOBILE BOTTOM NAVIGATION -->
                 <nav class="mobile-nav">
                     <div class="mobile-nav-items">
-                        <a href="#" class="mobile-nav-item ${this.currentView === 'all' ? 'active' : ''}" data-view="all">
+                        <a href="#" class="mobile-nav-item ${this.currentView === "all" ? "active" : ""}" data-view="all">
                             ${iconDashboard}
                             <span>All</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === 'favorites' ? 'active' : ''}" data-view="favorites">
+                        <a href="#" class="mobile-nav-item ${this.currentView === "favorites" ? "active" : ""}" data-view="favorites">
                             ${iconHeart}
                             <span>Favorites</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === 'categories-page' ? 'active' : ''}" data-view="categories-page">
+                        <a href="#" class="mobile-nav-item ${this.currentView === "categories-page" ? "active" : ""}" data-view="categories-page">
                             ${iconCategory}
                             <span>Categories</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === 'recent' ? 'active' : ''}" data-view="recent">
+                        <a href="#" class="mobile-nav-item ${this.currentView === "recent" ? "active" : ""}" data-view="recent">
                             ${iconClock}
                             <span>Recent</span>
+                        </a>
+                        <a href="#" class="mobile-nav-item ${this.currentView === "settings" ? "active" : ""}" data-view="settings">
+                            ${iconSettings}
+                            <span>Settings</span>
                         </a>
                     </div>
                 </nav>
@@ -420,221 +503,374 @@ class App {
                 <div id="modal-container"></div>
             </div>
         `;
-    }
+  }
 
-    renderError(error) {
-         document.getElementById('loading').innerHTML = `
+  renderError(error) {
+    document.getElementById("loading").innerHTML = `
             <div style="text-align:center; padding:2rem">
                 <h2>Error</h2><p>${error.message}</p>
                 <button onclick="location.reload()">Reload</button>
             </div>`;
-    }
+  }
 
-    // --- EVENT LISTENERS ---
+  // --- EVENT LISTENERS ---
 
-    setupEventListeners() {
-        document.addEventListener('click', (e) => {
-            const action = e.target.closest('[data-action]')?.dataset.action;
-            if (action === 'nav-login') {
-                this.currentPage = 'login';
-                this.render();
-            }
-            if (action === 'nav-signup') {
-                this.currentPage = 'signup';
-                this.render();
-            }
-            if (action === 'add-account') {
-                this.currentPage = 'login';
-                document.getElementById('mobile-profile-dropdown')?.classList.add('hidden');
-                document.getElementById('profile-overlay')?.classList.add('hidden');
-                this.render();
-            }
-        });
-    }
+  setupEventListeners() {
+    document.addEventListener("click", (e) => {
+      const action = e.target.closest("[data-action]")?.dataset.action;
+      if (action === "nav-login") {
+        this.currentPage = "login";
+        this.render();
+      }
+      if (action === "nav-signup") {
+        this.currentPage = "signup";
+        this.render();
+      }
+      if (action === "nav-forgot-password") {
+        this.currentPage = "forgot-password";
+        this.render();
+      }
+      if (action === "add-account") {
+        this.currentPage = "login";
+        document
+          .getElementById("mobile-profile-dropdown")
+          ?.classList.add("hidden");
+        document.getElementById("profile-overlay")?.classList.add("hidden");
+        this.render();
+      }
+    });
+  }
 
-    setupDynamicListeners() {
-        // Landing & Auth
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                
-                try {
-                    // Show loader
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = `
+  setupDynamicListeners() {
+    // Landing & Auth
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        try {
+          // Show loader
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
                         <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <div class="spinner-small"></div>
                             Signing in...
                         </div>
                     `;
-                    
-                    await authService.login(e.target.email.value, e.target.password.value);
-                    this.user = authService.getCurrentUser();
-                    
-                    // Show success toast
-                    toast.success('Welcome back! Redirecting to dashboard...');
-                    
-                    // Redirect to dashboard after short delay
-                    setTimeout(() => {
-                        this.currentPage = 'dashboard';
-                        this.render();
-                    }, 800);
-                } catch (error) {
-                    // Show error toast
-                    toast.error(error.message || 'Login failed. Please try again.');
-                    
-                    // Reset button
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
-            });
-        }
 
-        const signupForm = document.getElementById('signup-form');
-        if (signupForm) {
-            signupForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                
-                try {
-                    // Show loader
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = `
+          await authService.login(
+            e.target.email.value,
+            e.target.password.value,
+          );
+          this.user = authService.getCurrentUser();
+
+          // Show success toast
+          toast.success("Welcome back! Redirecting to dashboard...");
+
+          // Redirect to dashboard after short delay
+          setTimeout(() => {
+            this.currentPage = "dashboard";
+            this.render();
+          }, 800);
+        } catch (error) {
+          // Show error toast
+          toast.error(error.message || "Login failed. Please try again.");
+
+          // Reset button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+    }
+
+    const signupForm = document.getElementById("signup-form");
+    if (signupForm) {
+      signupForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        try {
+          // Show loader
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
                         <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <div class="spinner-small"></div>
                             Creating account...
                         </div>
                     `;
-                    
-                    await authService.signup(e.target.name.value, e.target.email.value, e.target.password.value);
-                    this.user = authService.getCurrentUser();
-                    
-                    // Show success toast
-                    toast.success('Account created successfully! Redirecting...');
-                    
-                    // Redirect to dashboard after short delay
-                    setTimeout(() => {
-                        this.currentPage = 'dashboard';
-                        this.render();
-                    }, 800);
-                } catch (error) {
-                    // Show error toast
-                    toast.error(error.message || 'Signup failed. Please try again.');
-                    
-                    // Reset button
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
-            });
+
+          await authService.signup(
+            e.target.name.value,
+            e.target.email.value,
+            e.target.password.value,
+          );
+          this.user = authService.getCurrentUser();
+
+          // Show success toast
+          toast.success("Account created successfully! Redirecting...");
+
+          // Redirect to dashboard after short delay
+          setTimeout(() => {
+            this.currentPage = "dashboard";
+            this.render();
+          }, 800);
+        } catch (error) {
+          // Show error toast
+          toast.error(error.message || "Signup failed. Please try again.");
+
+          // Reset button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
-
-        // Dashboard
-        if (this.currentPage === 'dashboard') {
-            this.hydrateDashboard();
-            
-            // Logout
-            document.getElementById('logout-btn')?.addEventListener('click', () => {
-                authService.logout();
-            });
-            // Add Link (Desktop)
-            document.getElementById('add-link-btn')?.addEventListener('click', () => this.showAddLinkModal());
-            
-            // Mobile FAB
-            document.getElementById('mobile-add-btn')?.addEventListener('click', () => this.showAddLinkModal());
-            
-            // Gmail-like Account Switcher — attached only to avatar elements
-            // Use rAF so avatar dimensions are available (post-layout)
-            requestAnimationFrame(() => this._setupAccountSwiper());
-
-
-            // Mobile Profile Dropdown Toggle
-            const mobileProfileToggle = document.getElementById('mobile-profile-toggle');
-            const mobileProfileDropdown = document.getElementById('mobile-profile-dropdown');
-            const profileOverlay = document.getElementById('profile-overlay');
-            
-            if (mobileProfileToggle && mobileProfileDropdown && profileOverlay) {
-                const toggleDropdown = () => {
-                    mobileProfileDropdown.classList.toggle('hidden');
-                    profileOverlay.classList.toggle('hidden');
-                };
-                
-                mobileProfileToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleDropdown();
-                });
-                
-                profileOverlay.addEventListener('click', toggleDropdown);
-                
-                // Close when clicking outside (fallback)
-                document.addEventListener('click', (e) => {
-                    if (!mobileProfileDropdown.classList.contains('hidden') && 
-                        !mobileProfileDropdown.contains(e.target) && 
-                        !mobileProfileToggle.contains(e.target)) {
-                        toggleDropdown();
-                    }
-                });
-            }
-            
-            // Mobile Logout
-            document.getElementById('mobile-logout-btn')?.addEventListener('click', () => {
-                authService.logout();
-            });
-            
-            // Search
-            const searchInput = document.getElementById('global-search');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    this.handleSearch(e.target.value);
-                });
-            }
-
-            // Navigation items (All/Favorites/Recent) - works for both desktop and mobile
-            document.querySelectorAll('[data-view]').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.currentView = e.currentTarget.dataset.view;
-                    this.loadView();
-                    
-                    // Update active states
-                    document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
-                    document.querySelectorAll(`[data-view="${this.currentView}"]`).forEach(el => el.classList.add('active'));
-                });
-            });
-
-            // Category filter
-            document.querySelectorAll('[data-category]').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.currentView = 'category:' + e.currentTarget.dataset.category;
-                    this.loadView();
-                });
-            });
-        }
+      });
     }
 
-    async hydrateDashboard() {
-        // Load categories
-        await this.loadCategories();
-        // Load links based on current view
-        await this.loadView();
+    const forgotPasswordForm = document.getElementById("forgot-password-form");
+    if (forgotPasswordForm) {
+      forgotPasswordForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        const email = e.target.email.value.trim();
+
+        if (!email) {
+          toast.error("Please enter your email address.");
+          return;
+        }
+
+        try {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div class="spinner-small"></div>
+                            Sending link...
+                        </div>
+                    `;
+
+          await authService.requestPasswordReset(email);
+          toast.success("Password reset email sent. Please check your inbox.");
+
+          setTimeout(() => {
+            this.currentPage = "login";
+            this.render();
+          }, 1200);
+        } catch (error) {
+          toast.error(error.message || "Unable to send reset email.");
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
     }
 
-    _setupAccountSwiper() {
-        if (this.accounts.length <= 1) return; // Nothing to swipe if single account
+    const resetPasswordForm = document.getElementById("reset-password-form");
+    if (resetPasswordForm) {
+      resetPasswordForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        const password = e.target.password.value;
+        const confirmPassword = e.target.confirmPassword.value;
 
-        // For each avatar element in the DOM, we wrap it to clip overflow and attach swipe
-        const avatarEls = document.querySelectorAll('.avatar, .avatar-sm');
-        
-        avatarEls.forEach(avatarEl => {
-            // Wrap avatar in a clip wrapper if not already wrapped
-            if (!avatarEl.parentElement.classList.contains('avatar-swipe-wrapper')) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'avatar-swipe-wrapper';
-                wrapper.style.cssText = `
+        if (!password || password.length < 6) {
+          toast.error("Password must be at least 6 characters.");
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match.");
+          return;
+        }
+
+        try {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div class="spinner-small"></div>
+                            Updating password...
+                        </div>
+                    `;
+
+          await authService.updatePassword(password);
+          toast.success("Password updated successfully. You can sign in now.");
+
+          setTimeout(() => {
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname,
+            );
+            this.currentPage = "login";
+            this.render();
+          }, 1200);
+        } catch (error) {
+          toast.error(error.message || "Unable to update password.");
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+    }
+
+    const settingsPasswordChangeForm = document.getElementById(
+      "settings-password-change-form",
+    );
+    if (settingsPasswordChangeForm) {
+      settingsPasswordChangeForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const newPassword = e.target.newPassword.value;
+        const confirmPassword = e.target.confirmPassword.value;
+
+        if (!newPassword || newPassword.length < 6) {
+          toast.error("Password must be at least 6 characters.");
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          toast.error("Passwords do not match.");
+          return;
+        }
+
+        try {
+          const submitBtn = e.target.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = "Updating...";
+
+          await authService.updatePassword(newPassword);
+          toast.success("Password updated successfully.");
+          
+          e.target.reset();
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        } catch (error) {
+          toast.error(error.message || "Unable to update password.");
+          const submitBtn = e.target.querySelector('button[type="submit"]');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = "Change Password";
+        }
+      });
+    }
+
+    // Dashboard
+    if (this.currentPage === "dashboard") {
+      this.hydrateDashboard();
+
+      // Logout
+      document.getElementById("logout-btn")?.addEventListener("click", () => {
+        authService.logout();
+      });
+      // Add Link (Desktop)
+      document
+        .getElementById("add-link-btn")
+        ?.addEventListener("click", () => this.showAddLinkModal());
+
+      // Mobile FAB
+      document
+        .getElementById("mobile-add-btn")
+        ?.addEventListener("click", () => this.showAddLinkModal());
+
+      // Gmail-like Account Switcher — attached only to avatar elements
+      // Use rAF so avatar dimensions are available (post-layout)
+      requestAnimationFrame(() => this._setupAccountSwiper());
+
+      // Mobile Profile Dropdown Toggle
+      const mobileProfileToggle = document.getElementById(
+        "mobile-profile-toggle",
+      );
+      const mobileProfileDropdown = document.getElementById(
+        "mobile-profile-dropdown",
+      );
+      const profileOverlay = document.getElementById("profile-overlay");
+
+      if (mobileProfileToggle && mobileProfileDropdown && profileOverlay) {
+        const toggleDropdown = () => {
+          mobileProfileDropdown.classList.toggle("hidden");
+          profileOverlay.classList.toggle("hidden");
+        };
+
+        mobileProfileToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleDropdown();
+        });
+
+        profileOverlay.addEventListener("click", toggleDropdown);
+
+        // Close when clicking outside (fallback)
+        document.addEventListener("click", (e) => {
+          if (
+            !mobileProfileDropdown.classList.contains("hidden") &&
+            !mobileProfileDropdown.contains(e.target) &&
+            !mobileProfileToggle.contains(e.target)
+          ) {
+            toggleDropdown();
+          }
+        });
+      }
+
+      // Mobile Logout
+      document
+        .getElementById("mobile-logout-btn")
+        ?.addEventListener("click", () => {
+          authService.logout();
+        });
+
+      // Search
+      const searchInput = document.getElementById("global-search");
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          this.handleSearch(e.target.value);
+        });
+      }
+
+      // Navigation items (All/Favorites/Recent) - works for both desktop and mobile
+      document.querySelectorAll("[data-view]").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.currentView = e.currentTarget.dataset.view;
+          this.loadView();
+
+          // Update active states
+          document
+            .querySelectorAll("[data-view]")
+            .forEach((el) => el.classList.remove("active"));
+          document
+            .querySelectorAll(`[data-view="${this.currentView}"]`)
+            .forEach((el) => el.classList.add("active"));
+        });
+      });
+
+      // Category filter
+      document.querySelectorAll("[data-category]").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.currentView = "category:" + e.currentTarget.dataset.category;
+          this.loadView();
+        });
+      });
+    }
+  }
+
+  async hydrateDashboard() {
+    // Load categories
+    await this.loadCategories();
+    // Load links based on current view
+    await this.loadView();
+  }
+
+  _setupAccountSwiper() {
+    if (this.accounts.length <= 1) return; // Nothing to swipe if single account
+
+    // For each avatar element in the DOM, we wrap it to clip overflow and attach swipe
+    const avatarEls = document.querySelectorAll(".avatar, .avatar-sm");
+
+    avatarEls.forEach((avatarEl) => {
+      // Wrap avatar in a clip wrapper if not already wrapped
+      if (!avatarEl.parentElement.classList.contains("avatar-swipe-wrapper")) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "avatar-swipe-wrapper";
+        wrapper.style.cssText = `
                     overflow: hidden;
                     display: inline-flex;
                     align-items: center;
@@ -647,269 +883,324 @@ class App {
                     user-select: none;
                     -webkit-user-select: none;
                 `;
-                avatarEl.parentElement.insertBefore(wrapper, avatarEl);
-                wrapper.appendChild(avatarEl);
-            }
+        avatarEl.parentElement.insertBefore(wrapper, avatarEl);
+        wrapper.appendChild(avatarEl);
+      }
 
-            const wrapper = avatarEl.parentElement;
+      const wrapper = avatarEl.parentElement;
 
-            let startY = 0;
-            let isDragging = false;
-            let hasSwiped = false; // Track if an actual swipe happened (vs just a tap)
-            let isAnimating = false;
+      let startY = 0;
+      let isDragging = false;
+      let hasSwiped = false; // Track if an actual swipe happened (vs just a tap)
+      let isAnimating = false;
 
-            const doSwitch = async (direction) => {
-                if (isAnimating) return;
-                isAnimating = true;
+      const doSwitch = async (direction) => {
+        if (isAnimating) return;
+        isAnimating = true;
 
-                const slideOut = direction > 0 ? '-110%' : '110%';
-                const slideIn  = direction > 0 ?  '110%' : '-110%';
+        const slideOut = direction > 0 ? "-110%" : "110%";
+        const slideIn = direction > 0 ? "110%" : "-110%";
 
-                // Animate out
-                avatarEl.style.transition = 'transform 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease';
-                avatarEl.style.transform  = `translateY(${slideOut})`;
-                avatarEl.style.opacity    = '0';
+        // Animate out
+        avatarEl.style.transition =
+          "transform 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease";
+        avatarEl.style.transform = `translateY(${slideOut})`;
+        avatarEl.style.opacity = "0";
 
-                // Compute next index
-                const nextIndex = direction > 0
-                    ? (this.currentAccountIndex + 1) % this.accounts.length
-                    : (this.currentAccountIndex - 1 + this.accounts.length) % this.accounts.length;
+        // Compute next index
+        const nextIndex =
+          direction > 0
+            ? (this.currentAccountIndex + 1) % this.accounts.length
+            : (this.currentAccountIndex - 1 + this.accounts.length) %
+              this.accounts.length;
 
-                const targetAccount = this.accounts[nextIndex];
+        const targetAccount = this.accounts[nextIndex];
 
-                // Switch backend session
-                if (authService.isAuthenticated && targetAccount.access_token) {
-                    try {
-                        await authService.switchAccount(targetAccount);
-                        this.user = authService.getCurrentUser();
-                        this.accounts = authService.accounts;
-                        this.currentAccountIndex = 0;
-                    } catch (err) {
-                        console.error('Account switch failed:', err);
-                        toast.error('Could not switch account — session may have expired.');
-                        avatarEl.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
-                        avatarEl.style.transform  = 'translateY(0)';
-                        avatarEl.style.opacity    = '1';
-                        isAnimating = false;
-                        return;
-                    }
-                } else {
-                    this.user = targetAccount;
-                    this.currentAccountIndex = nextIndex;
-                }
+        // Switch backend session
+        if (authService.isAuthenticated && targetAccount.access_token) {
+          try {
+            await authService.switchAccount(targetAccount);
+            this.user = authService.getCurrentUser();
+            this.accounts = authService.accounts;
+            this.currentAccountIndex = 0;
+          } catch (err) {
+            console.error("Account switch failed:", err);
+            toast.error("Could not switch account — session may have expired.");
+            avatarEl.style.transition =
+              "transform 0.22s ease, opacity 0.22s ease";
+            avatarEl.style.transform = "translateY(0)";
+            avatarEl.style.opacity = "1";
+            isAnimating = false;
+            return;
+          }
+        } else {
+          this.user = targetAccount;
+          this.currentAccountIndex = nextIndex;
+        }
 
-                // Update all name/plan/email text across the whole page
-                const name  = this.user.name  || 'User';
-                const plan  = this.user.plan  || 'Free Plan';
-                const email = this.user.email || '';
-                const initial = name.charAt(0).toUpperCase();
+        // Update all name/plan/email text across the whole page
+        const name = this.user.name || "User";
+        const plan = this.user.plan || "Free Plan";
+        const email = this.user.email || "";
+        const initial = name.charAt(0).toUpperCase();
 
-                document.querySelectorAll('.avatar, .avatar-md, .avatar-sm').forEach(el => el.textContent = initial);
-                document.querySelectorAll('.user-name, .dropdown-name').forEach(el => el.textContent = name);
-                document.querySelectorAll('.user-plan, .dropdown-plan').forEach(el => el.textContent = plan);
-                document.querySelectorAll('.user-email').forEach(el => el.textContent = email);
+        document
+          .querySelectorAll(".avatar, .avatar-md, .avatar-sm")
+          .forEach((el) => (el.textContent = initial));
+        document
+          .querySelectorAll(".user-name, .dropdown-name")
+          .forEach((el) => (el.textContent = name));
+        document
+          .querySelectorAll(".user-plan, .dropdown-plan")
+          .forEach((el) => (el.textContent = plan));
+        document
+          .querySelectorAll(".user-email")
+          .forEach((el) => (el.textContent = email));
 
-                // Position new content below/above ready to slide in
-                avatarEl.style.transition  = 'none';
-                avatarEl.style.transform   = `translateY(${slideIn})`;
-                avatarEl.style.opacity     = '0';
-                void avatarEl.offsetWidth;  // force reflow
+        // Position new content below/above ready to slide in
+        avatarEl.style.transition = "none";
+        avatarEl.style.transform = `translateY(${slideIn})`;
+        avatarEl.style.opacity = "0";
+        void avatarEl.offsetWidth; // force reflow
 
-                // Animate in with a spring bounce
-                avatarEl.style.transition = 'transform 0.32s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.28s ease';
-                avatarEl.style.transform  = 'translateY(0)';
-                avatarEl.style.opacity    = '1';
+        // Animate in with a spring bounce
+        avatarEl.style.transition =
+          "transform 0.32s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.28s ease";
+        avatarEl.style.transform = "translateY(0)";
+        avatarEl.style.opacity = "1";
 
-                toast.info(`↔ Switched to ${name}`);
+        toast.info(`↔ Switched to ${name}`);
 
-                // Reload data for the new account
-                await this.hydrateDashboard();
+        // Reload data for the new account
+        await this.hydrateDashboard();
 
-                setTimeout(() => { isAnimating = false; startY = 0; }, 350);
-            };
+        setTimeout(() => {
+          isAnimating = false;
+          startY = 0;
+        }, 350);
+      };
 
-            // --- Touch ---
-            wrapper.addEventListener('touchstart', (e) => {
-                if (isAnimating) return;
-                startY = e.touches[0].clientY;
-                hasSwiped = false;
-                isDragging = false;
-            }, { passive: true });
+      // --- Touch ---
+      wrapper.addEventListener(
+        "touchstart",
+        (e) => {
+          if (isAnimating) return;
+          startY = e.touches[0].clientY;
+          hasSwiped = false;
+          isDragging = false;
+        },
+        { passive: true },
+      );
 
-            wrapper.addEventListener('touchmove', (e) => {
-                if (isAnimating || !startY) return;
-                isDragging = true;
-            }, { passive: true });
+      wrapper.addEventListener(
+        "touchmove",
+        (e) => {
+          if (isAnimating || !startY) return;
+          isDragging = true;
+        },
+        { passive: true },
+      );
 
-            wrapper.addEventListener('touchend', (e) => {
-                if (isAnimating || !startY) return;
-                const endY  = e.changedTouches[0].clientY;
-                const diffY = startY - endY;
-                if (Math.abs(diffY) > 40) {
-                    hasSwiped = true;
-                    doSwitch(diffY > 0 ? 1 : -1);
-                }
-                startY = 0;
-                isDragging = false;
-            }, { passive: true });
+      wrapper.addEventListener(
+        "touchend",
+        (e) => {
+          if (isAnimating || !startY) return;
+          const endY = e.changedTouches[0].clientY;
+          const diffY = startY - endY;
+          if (Math.abs(diffY) > 40) {
+            hasSwiped = true;
+            doSwitch(diffY > 0 ? 1 : -1);
+          }
+          startY = 0;
+          isDragging = false;
+        },
+        { passive: true },
+      );
 
-            // --- Mouse (desktop) ---
-            let mouseMoved = false;
-            wrapper.addEventListener('mousedown', (e) => {
-                if (isAnimating) return;
-                startY = e.clientY;
-                mouseMoved = false;
-                wrapper.style.cursor = 'grabbing';
-            });
+      // --- Mouse (desktop) ---
+      let mouseMoved = false;
+      wrapper.addEventListener("mousedown", (e) => {
+        if (isAnimating) return;
+        startY = e.clientY;
+        mouseMoved = false;
+        wrapper.style.cursor = "grabbing";
+      });
 
-            window.addEventListener('mousemove', (e) => {
-                if (!startY || isAnimating) return;
-                if (Math.abs(startY - e.clientY) > 5) mouseMoved = true;
-            });
+      window.addEventListener("mousemove", (e) => {
+        if (!startY || isAnimating) return;
+        if (Math.abs(startY - e.clientY) > 5) mouseMoved = true;
+      });
 
-            window.addEventListener('mouseup', (e) => {
-                if (!startY || isAnimating) { startY = 0; wrapper.style.cursor = 'grab'; return; }
-                const diffY = startY - e.clientY;
-                if (mouseMoved && Math.abs(diffY) > 40) {
-                    doSwitch(diffY > 0 ? 1 : -1);
-                }
-                startY = 0;
-                mouseMoved = false;
-                wrapper.style.cursor = 'grab';
-            });
-        });
-    }
+      window.addEventListener("mouseup", (e) => {
+        if (!startY || isAnimating) {
+          startY = 0;
+          wrapper.style.cursor = "grab";
+          return;
+        }
+        const diffY = startY - e.clientY;
+        if (mouseMoved && Math.abs(diffY) > 40) {
+          doSwitch(diffY > 0 ? 1 : -1);
+        }
+        startY = 0;
+        mouseMoved = false;
+        wrapper.style.cursor = "grab";
+      });
+    });
+  }
 
-    async loadCategories() {
-        try {
-            let dbCategories = [];
-            
-            // Fetch from Supabase
-            try {
-                dbCategories = await linkManager.getCategories();
-            } catch (err) {
-                console.warn('Failed to fetch categories from Supabase:', err);
-            }
-            
-            // Get custom categories from localStorage
-            const customCategories = JSON.parse(localStorage.getItem('custom_categories') || '[]');
-            
-            // Remove duplicates from localStorage
-            const uniqueCustomCategories = [...new Set(customCategories)];
-            if (uniqueCustomCategories.length !== customCategories.length) {
-                localStorage.setItem('custom_categories', JSON.stringify(uniqueCustomCategories));
-            }
-            
-            // Merge: add custom categories that don't exist in DB yet
-            const mergedCategories = [...dbCategories];
-            uniqueCustomCategories.forEach(customCat => {
-                if (!mergedCategories.some(c => c.category === customCat)) {
-                    mergedCategories.push({ category: customCat, count: 0 });
-                }
-            });
-            
-            this.categories = mergedCategories;
-            
-            // Update sidebar if already rendered
-            const categoriesList = document.getElementById('categories-list');
-            if (categoriesList) {
-                const categoriesHTML = this.categories.map(cat => `
+  async loadCategories() {
+    try {
+      let dbCategories = [];
+
+      // Fetch from Supabase
+      try {
+        dbCategories = await linkManager.getCategories();
+      } catch (err) {
+        console.warn("Failed to fetch categories from Supabase:", err);
+      }
+
+      // Get custom categories from localStorage
+      const customCategories = JSON.parse(
+        localStorage.getItem("custom_categories") || "[]",
+      );
+
+      // Remove duplicates from localStorage
+      const uniqueCustomCategories = [...new Set(customCategories)];
+      if (uniqueCustomCategories.length !== customCategories.length) {
+        localStorage.setItem(
+          "custom_categories",
+          JSON.stringify(uniqueCustomCategories),
+        );
+      }
+
+      // Merge: add custom categories that don't exist in DB yet
+      const mergedCategories = [...dbCategories];
+      uniqueCustomCategories.forEach((customCat) => {
+        if (!mergedCategories.some((c) => c.category === customCat)) {
+          mergedCategories.push({ category: customCat, count: 0 });
+        }
+      });
+
+      this.categories = mergedCategories;
+
+      // Update sidebar if already rendered
+      const categoriesList = document.getElementById("categories-list");
+      if (categoriesList) {
+        const categoriesHTML = this.categories
+          .map(
+            (cat) => `
                     <a href="#" class="nav-item tag-item" data-category="${cat.category}">
                         <span>#</span> ${cat.category} <small>(${cat.count})</small>
                     </a>
-                `).join('');
-                categoriesList.innerHTML = categoriesHTML || '<p style="padding: 0 1rem; color: var(--text-tertiary); font-size: 0.85rem;">No categories yet</p>';
-                
-                // Re-attach listeners
-                document.querySelectorAll('[data-category]').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        this.currentView = 'category:' + e.currentTarget.dataset.category;
-                        this.loadView();
-                    });
-                });
-            }
-        } catch (error) {
-            console.error('Failed to load categories:', error);
-        }
-    }
+                `,
+          )
+          .join("");
+        categoriesList.innerHTML =
+          categoriesHTML ||
+          '<p style="padding: 0 1rem; color: var(--text-tertiary); font-size: 0.85rem;">No categories yet</p>';
 
-    async loadView() {
-        let links = [];
-        let title = 'All Links';
-
-        try {
-            if (this.currentView === 'all') {
-                links = await linkManager.getAllLinks();
-                title = 'All Links';
-                this.renderLinksList(links);
-            } else if (this.currentView === 'favorites') {
-                links = await searchEngine.getFavorites();
-                title = 'Favorites';
-                this.renderLinksList(links);
-            } else if (this.currentView === 'recent') {
-                const allLinks = await linkManager.getAllLinks();
-                
-                // Industry standard: "Recent" means within a certain time window (e.g. 7 days)
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                
-                links = allLinks
-                    .filter(link => {
-                        const actionDate = new Date(link.updated_at || link.created_at);
-                        return actionDate >= sevenDaysAgo;
-                    })
-                    .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-                    .slice(0, 12); // max 12 items
-                    
-                title = 'Recent (Last 7 Days)';
-                this.renderLinksList(links);
-            } else if (this.currentView === 'categories-page') {
-                title = 'Categories';
-                this.renderCategoriesPage();
-                return;
-            } else if (this.currentView === 'settings') {
-                title = 'Settings';
-                this.renderSettingsPage();
-                return;
-            } else if (this.currentView.startsWith('category:')) {
-                const category = this.currentView.replace('category:', '');
-                links = await searchEngine.searchByCategory(category);
-                title = `# ${category}`;
-                this.renderLinksList(links);
-            }
-
-            document.getElementById('view-title').innerHTML = `${title} <span class="count-badge">(${links.length})</span>`;
-
-            // Update active state in sidebar
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            const activeItem = document.querySelector(`[data-view="${this.currentView}"]`) || 
-                              document.querySelector(`[data-category="${this.currentView.replace('category:', '')}"]`);
-            if (activeItem) activeItem.classList.add('active');
-
-        } catch (error) {
-            console.error('Failed to load view:', error);
-            this.renderLinksList([]);
-        }
-    }
-    
-    handleSearch(query) {
-        if (!query.trim()) {
+        // Re-attach listeners
+        document.querySelectorAll("[data-category]").forEach((item) => {
+          item.addEventListener("click", (e) => {
+            e.preventDefault();
+            this.currentView = "category:" + e.currentTarget.dataset.category;
             this.loadView();
-            return;
-        }
-        searchEngine.search(query).then(results => {
-             document.getElementById('view-title').innerHTML = `Search Results <span class="count-badge">(${results.length})</span>`;
-             this.renderLinksList(results);
+          });
         });
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
     }
+  }
 
-    renderLinksList(links) {
-        const container = document.getElementById('links-grid');
-        if (!container) return;
+  async loadView() {
+    let links = [];
+    let title = "All Links";
 
-        if (links.length === 0) {
-            container.innerHTML = `
+    try {
+      if (this.currentView === "all") {
+        links = await linkManager.getAllLinks();
+        title = "All Links";
+        this.renderLinksList(links);
+      } else if (this.currentView === "favorites") {
+        links = await searchEngine.getFavorites();
+        title = "Favorites";
+        this.renderLinksList(links);
+      } else if (this.currentView === "recent") {
+        const allLinks = await linkManager.getAllLinks();
+
+        // Industry standard: "Recent" means within a certain time window (e.g. 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        links = allLinks
+          .filter((link) => {
+            const actionDate = new Date(link.updated_at || link.created_at);
+            return actionDate >= sevenDaysAgo;
+          })
+          .sort(
+            (a, b) =>
+              new Date(b.updated_at || b.created_at) -
+              new Date(a.updated_at || a.created_at),
+          )
+          .slice(0, 12); // max 12 items
+
+        title = "Recent (Last 7 Days)";
+        this.renderLinksList(links);
+      } else if (this.currentView === "categories-page") {
+        title = "Categories";
+        this.renderCategoriesPage();
+        return;
+      } else if (this.currentView === "settings") {
+        title = "Settings";
+        this.renderSettingsPage();
+        return;
+      } else if (this.currentView.startsWith("category:")) {
+        const category = this.currentView.replace("category:", "");
+        links = await searchEngine.searchByCategory(category);
+        title = `# ${category}`;
+        this.renderLinksList(links);
+      }
+
+      document.getElementById("view-title").innerHTML =
+        `${title} <span class="count-badge">(${links.length})</span>`;
+
+      // Update active state in sidebar
+      document
+        .querySelectorAll(".nav-item")
+        .forEach((item) => item.classList.remove("active"));
+      const activeItem =
+        document.querySelector(`[data-view="${this.currentView}"]`) ||
+        document.querySelector(
+          `[data-category="${this.currentView.replace("category:", "")}"]`,
+        );
+      if (activeItem) activeItem.classList.add("active");
+    } catch (error) {
+      console.error("Failed to load view:", error);
+      this.renderLinksList([]);
+    }
+  }
+
+  handleSearch(query) {
+    if (!query.trim()) {
+      this.loadView();
+      return;
+    }
+    searchEngine.search(query).then((results) => {
+      document.getElementById("view-title").innerHTML =
+        `Search Results <span class="count-badge">(${results.length})</span>`;
+      this.renderLinksList(results);
+    });
+  }
+
+  renderLinksList(links) {
+    const container = document.getElementById("links-grid");
+    if (!container) return;
+    
+    container.className = "cards-grid";
+
+    if (links.length === 0) {
+      container.innerHTML = `
                 <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; grid-column: 1 / -1; min-height: 40vh;">
                     <style>
                         @keyframes floatCat { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
@@ -943,21 +1234,26 @@ class App {
                     <p style="color: var(--text-secondary); max-width: 320px; text-align: center; font-size: 0.95rem; line-height: 1.5;">Looks like our database cat is taking a nap. Try searching for something else or add some new links!</p>
                 </div>
             `;
-            return;
-        }
-        
-        container.innerHTML = links.map(link => this.renderLinkCard(link)).join('');
+      return;
     }
 
-    renderCategoriesPage() {
-        const container = document.getElementById('links-grid');
-        if (!container) return;
+    container.innerHTML = links
+      .map((link) => this.renderLinkCard(link))
+      .join("");
+  }
 
-        // Update title
-        document.getElementById('view-title').innerHTML = `Categories <span class="count-badge">(${this.categories.length})</span>`;
+  renderCategoriesPage() {
+    const container = document.getElementById("links-grid");
+    if (!container) return;
 
-        // Render categories grid
-        const categoriesHTML = this.categories.map(cat => `
+    // Update title
+    document.getElementById("view-title").innerHTML =
+      `Categories <span class="count-badge">(${this.categories.length})</span>`;
+
+    // Render categories grid
+    const categoriesHTML = this.categories
+      .map(
+        (cat) => `
             <div class="category-card">
                 <div class="category-header">
                     <div class="category-icon" style="background: linear-gradient(135deg, ${this.getCategoryColor(cat.category)} 0%, ${this.getCategoryColorDark(cat.category)} 100%);">
@@ -968,15 +1264,17 @@ class App {
                     </button>
                 </div>
                 <h3 class="category-name">${cat.category}</h3>
-                <p class="category-count">${cat.count} ${cat.count === 1 ? 'link' : 'links'}</p>
+                <p class="category-count">${cat.count} ${cat.count === 1 ? "link" : "links"}</p>
                 <button class="btn btn-outline btn-block" onclick="app.viewCategory('${cat.category}')" style="margin-top: 1rem; font-size: 0.9rem; padding: 0.6rem 1rem;">
                     View Links
                 </button>
             </div>
-        `).join('');
+        `,
+      )
+      .join("");
 
-        // Add "Create New Category" card at the beginning
-        const createCardHTML = `
+    // Add "Create New Category" card at the beginning
+    const createCardHTML = `
             <div class="category-card create-category-card" onclick="app.showCreateCategoryInline()">
                 <div class="create-icon">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -989,37 +1287,53 @@ class App {
             </div>
         `;
 
-        container.innerHTML = createCardHTML + categoriesHTML;
-        container.className = 'cards-grid'; // Use same grid
-    }
+    container.innerHTML = createCardHTML + categoriesHTML;
+    container.className = "cards-grid"; // Use same grid
+  }
 
-    getCategoryColor(name) {
-        const colors = ['#2563EB', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#16a34a', '#0891b2'];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
+  getCategoryColor(name) {
+    const colors = [
+      "#2563EB",
+      "#7c3aed",
+      "#db2777",
+      "#dc2626",
+      "#ea580c",
+      "#16a34a",
+      "#0891b2",
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
+    return colors[Math.abs(hash) % colors.length];
+  }
 
-    getCategoryColorDark(name) {
-        const colors = ['#1d4ed8', '#6d28d9', '#be185d', '#b91c1c', '#c2410c', '#15803d', '#0e7490'];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
+  getCategoryColorDark(name) {
+    const colors = [
+      "#1d4ed8",
+      "#6d28d9",
+      "#be185d",
+      "#b91c1c",
+      "#c2410c",
+      "#15803d",
+      "#0e7490",
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
+    return colors[Math.abs(hash) % colors.length];
+  }
 
-    viewCategory(categoryName) {
-        this.currentView = 'category:' + categoryName;
-        this.loadView();
-    }
+  viewCategory(categoryName) {
+    this.currentView = "category:" + categoryName;
+    this.loadView();
+  }
 
-    showCreateCategoryInline() {
-        const modalContainer = document.getElementById('modal-container');
-        
-        modalContainer.innerHTML = `
+  showCreateCategoryInline() {
+    const modalContainer = document.getElementById("modal-container");
+
+    modalContainer.innerHTML = `
             <div class="modal-overlay">
                 <div class="modal" style="max-width: 480px;">
                     <div class="modal-header">
@@ -1042,230 +1356,348 @@ class App {
                 </div>
             </div>
         `;
-        
-        modalContainer.querySelector('.close-modal').onclick = () => modalContainer.innerHTML = '';
-        
-        document.getElementById('create-category-inline-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const categoryName = formData.get('categoryName').trim();
-            
-            console.log('Creating category:', categoryName);
-            
-            if (!categoryName) return;
-            
-            // Check if exists
-            if (this.categories.some(c => c.category.toLowerCase() === categoryName.toLowerCase())) {
-                // Show error in modal
-                const errorContainer = document.getElementById('error-message');
-                errorContainer.innerHTML = `
+
+    modalContainer.querySelector(".close-modal").onclick = () =>
+      (modalContainer.innerHTML = "");
+
+    document.getElementById("create-category-inline-form").onsubmit = async (
+      e,
+    ) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const categoryName = formData.get("categoryName").trim();
+
+      console.log("Creating category:", categoryName);
+
+      if (!categoryName) return;
+
+      // Check if exists
+      if (
+        this.categories.some(
+          (c) => c.category.toLowerCase() === categoryName.toLowerCase(),
+        )
+      ) {
+        // Show error in modal
+        const errorContainer = document.getElementById("error-message");
+        errorContainer.innerHTML = `
                     <div style="background: #fee2e2; color: #dc2626; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem;">
                         This category already exists!
                     </div>
                 `;
-                setTimeout(() => errorContainer.innerHTML = '', 3000);
-                return;
-            }
-            
-            try {
-                // Add to localStorage
-                const storedCategories = JSON.parse(localStorage.getItem('custom_categories') || '[]');
-                storedCategories.push(categoryName);
-                localStorage.setItem('custom_categories', JSON.stringify(storedCategories));
-                
-                console.log('Category saved to localStorage:', storedCategories);
-                
-                // Close modal
-                modalContainer.innerHTML = '';
-                
-                toast.success(`Category "${categoryName}" created successfully!`);
-                
-                // Reload categories and refresh page
-                await this.loadCategories();
-                this.renderCategoriesPage();
-                
-                console.log('Categories page refreshed');
-            } catch (error) {
-                console.error('Error creating category:', error);
-                const errorContainer = document.getElementById('error-message');
-                errorContainer.innerHTML = `
+        setTimeout(() => (errorContainer.innerHTML = ""), 3000);
+        return;
+      }
+
+      try {
+        // Add to localStorage
+        const storedCategories = JSON.parse(
+          localStorage.getItem("custom_categories") || "[]",
+        );
+        storedCategories.push(categoryName);
+        localStorage.setItem(
+          "custom_categories",
+          JSON.stringify(storedCategories),
+        );
+
+        console.log("Category saved to localStorage:", storedCategories);
+
+        // Close modal
+        modalContainer.innerHTML = "";
+
+        toast.success(`Category "${categoryName}" created successfully!`);
+
+        // Reload categories and refresh page
+        await this.loadCategories();
+        this.renderCategoriesPage();
+
+        console.log("Categories page refreshed");
+      } catch (error) {
+        console.error("Error creating category:", error);
+        const errorContainer = document.getElementById("error-message");
+        errorContainer.innerHTML = `
                     <div style="background: #fee2e2; color: #dc2626; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem;">
                         Failed to create category. Please try again.
                     </div>
                 `;
-            }
-        };
+      }
+    };
+  }
+
+  getProfileAvatarMarkup() {
+    const avatarUrl = this.user?.avatar_url;
+    if (avatarUrl) {
+      return `<img src="${avatarUrl}" alt="Profile" class="settings-avatar-image">`;
     }
 
-    renderSettingsPage() {
-        const container = document.getElementById('links-grid');
-        if (!container) return;
+    const initials = (this.user?.name || "U")
+      .split(" ")
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    return `<div class="settings-avatar-initials">${initials}</div>`;
+  }
 
-        // Update title
-        document.getElementById('view-title').innerHTML = `Settings`;
+  setTheme(theme) {
+    this.theme = theme;
+    localStorage.setItem("theme", theme);
+    this.applyTheme();
+  }
 
-        container.innerHTML = `
-            <div style="max-width: 800px; margin: 0 auto;">
-                <!-- Profile Settings -->
+  async handleAvatarUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const modalContainer = document.getElementById("modal-container");
+      modalContainer.innerHTML = `
+                <div class="modal-overlay">
+                    <div class="modal" style="max-width: 520px;">
+                        <div class="modal-header">
+                            <h2>Crop profile picture</h2>
+                            <button class="close-modal" type="button">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="padding: 1.25rem 2rem 2rem;">
+                            <div style="display:flex; justify-content:center; margin-bottom: 1rem;">
+                                <canvas id="avatar-crop-canvas" width="280" height="280" style="max-width: 100%; border-radius: 16px; background: var(--color-slate-50);"></canvas>
+                            </div>
+                            <label style="display:block; margin-bottom: 0.75rem; font-weight: 600;">Zoom</label>
+                            <input id="avatar-zoom" type="range" min="1" max="2.5" step="0.1" value="1" style="width: 100%;">
+                            <div style="display:flex; gap: 0.75rem; margin-top: 1.25rem;">
+                                <button type="button" class="btn btn-outline" data-action="cancel-avatar-crop">Cancel</button>
+                                <button type="button" id="save-avatar-crop" class="btn btn-primary">Save photo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+      const canvas = modalContainer.querySelector("#avatar-crop-canvas");
+      const zoomInput = modalContainer.querySelector("#avatar-zoom");
+      const drawPreview = () => {
+        const ctx = canvas.getContext("2d");
+        const size = 280;
+        ctx.clearRect(0, 0, size, size);
+        ctx.fillStyle = "var(--color-slate-50)";
+        ctx.fillRect(0, 0, size, size);
+
+        const zoom = parseFloat(zoomInput.value || 1);
+        const sourceSize =
+          Math.max(image.naturalWidth, image.naturalHeight) / zoom;
+        const sourceX = (image.naturalWidth - sourceSize) / 2;
+        const sourceY = (image.naturalHeight - sourceSize) / 2;
+        ctx.drawImage(
+          image,
+          sourceX,
+          sourceY,
+          sourceSize,
+          sourceSize,
+          0,
+          0,
+          size,
+          size,
+        );
+      };
+
+      zoomInput.addEventListener("input", drawPreview);
+      drawPreview();
+
+      modalContainer.querySelector(".close-modal").onclick = () => {
+        modalContainer.innerHTML = "";
+        URL.revokeObjectURL(objectUrl);
+      };
+      modalContainer.querySelector(
+        '[data-action="cancel-avatar-crop"]',
+      ).onclick = () => {
+        modalContainer.innerHTML = "";
+        URL.revokeObjectURL(objectUrl);
+      };
+      modalContainer.querySelector("#save-avatar-crop").onclick = async () => {
+        const dataUrl = canvas.toDataURL("image/png");
+        try {
+          await authService.updateProfile({ avatar_url: dataUrl });
+          this.user = authService.getCurrentUser();
+          toast.success("Profile photo updated.");
+          this.renderSettingsPage();
+          modalContainer.innerHTML = "";
+          URL.revokeObjectURL(objectUrl);
+        } catch (error) {
+          toast.error(error.message || "Unable to update profile photo.");
+        }
+      };
+    };
+    image.src = objectUrl;
+  }
+
+  async removeAvatar() {
+    try {
+      await authService.updateProfile({ avatar_url: null });
+      this.user = authService.getCurrentUser();
+      this.renderSettingsPage();
+      toast.success("Profile photo removed.");
+    } catch (error) {
+      toast.error(error.message || "Unable to remove profile photo.");
+    }
+  }
+
+  renderSettingsPage() {
+    const container = document.getElementById("links-grid");
+    if (!container) return;
+
+    document.getElementById("view-title").innerHTML = "Settings";
+
+    const userName = this.user?.name || "Your name";
+    const userEmail = this.user?.email || "demo@credlyst.com";
+
+    container.innerHTML = `
+            <div style="max-width: 900px; margin: 0 auto; display: grid; gap: 1.5rem;">
                 <div class="settings-section">
-                    <h3 class="settings-title">Profile Information</h3>
+                    <h3 class="settings-title">Profile</h3>
                     <div class="settings-card">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" value="${this.user.name}" readonly style="background: var(--color-slate-50);">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" value="${this.user.email || 'demo@credlyst.com'}" readonly style="background: var(--color-slate-50);">
-                        </div>
-                        <div class="form-group">
-                            <label>Plan</label>
-                            <input type="text" value="Free Plan" readonly style="background: var(--color-slate-50);">
+                        <div style="margin-bottom: 0.5rem;">
+                            <h3 style="margin: 0 0 0.35rem; font-size: 1.15rem;">${userName}</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">${userEmail}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Preferences -->
                 <div class="settings-section">
-                    <h3 class="settings-title">Preferences</h3>
+                    <h3 class="settings-title">Security</h3>
                     <div class="settings-card">
-                        <div class="setting-item">
-                            <div>
-                                <strong>Theme</strong>
-                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Choose your preferred color scheme</p>
+                        <form id="settings-password-change-form">
+                            <div class="form-group">
+                                <label>New password</label>
+                                <input type="password" name="newPassword" required placeholder="••••••••">
                             </div>
-                            <select style="width: auto; min-width: 150px;">
-                                <option value="light" selected>Light</option>
-                                <option value="dark">Dark</option>
-                                <option value="auto">Auto</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <div>
-                                <strong>Default View</strong>
-                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Page to show when you open the app</p>
+                            <div class="form-group">
+                                <label>Confirm new password</label>
+                                <input type="password" name="confirmPassword" required placeholder="••••••••">
                             </div>
-                            <select style="width: auto; min-width: 150px;">
-                                <option value="all" selected>All Links</option>
-                                <option value="favorites">Favorites</option>
-                                <option value="recent">Recent</option>
-                            </select>
-                        </div>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
                     </div>
                 </div>
 
-                <!-- Data Management -->
                 <div class="settings-section">
-                    <h3 class="settings-title">Data Management</h3>
+                    <h3 class="settings-title">Data</h3>
                     <div class="settings-card">
                         <div class="setting-item">
                             <div>
                                 <strong>Export Data</strong>
-                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Download all your links as JSON</p>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Download all your links.</p>
                             </div>
-                            <button class="btn btn-outline" onclick="app.exportData()">Export</button>
-                        </div>
-                        <div class="setting-item">
-                            <div>
-                                <strong>Clear All Data</strong>
-                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Permanently delete all links and categories</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-outline" onclick="app.exportData('json')">JSON</button>
+                                <button class="btn btn-outline" onclick="app.exportData('csv')">CSV</button>
+                                <button class="btn btn-outline" onclick="app.exportData('pdf')">PDF</button>
                             </div>
-                            <button class="btn btn-outline" style="color: #dc2626; border-color: #dc2626;" onclick="app.clearAllData()">Clear Data</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- About -->
-                <div class="settings-section">
-                    <h3 class="settings-title">About</h3>
-                    <div class="settings-card">
-                        <div style="text-align: center; padding: 2rem;">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">🔗</div>
-                            <h2 style="margin-bottom: 0.5rem;">Credlyst</h2>
-                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Version 1.0.0</p>
-                            <p style="color: var(--text-secondary); font-size: 0.95rem;">A beautiful, privacy-focused link management tool</p>
                         </div>
                     </div>
                 </div>
             </div>
         `;
 
-        container.className = ''; // Remove grid class
+    container.className = "";
+  }
+
+  async exportData(format = 'json') {
+    try {
+      const links = await linkManager.getAllLinks();
+      
+      if (format === 'json') {
+          const data = {
+            links,
+            categories: this.categories,
+            exportDate: new Date().toISOString(),
+          };
+
+          const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: "application/json",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `credlyst-export-${new Date().toISOString().split("T")[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+      } else if (format === 'csv') {
+          const headers = ['Title', 'URL', 'Description', 'Category', 'Keywords', 'Favorite', 'Created At'];
+          const csvContent = [
+              headers.join(','),
+              ...links.map(link => {
+                  return [
+                      `"${(link.title || '').replace(/"/g, '""')}"`,
+                      `"${(link.url || '').replace(/"/g, '""')}"`,
+                      `"${(link.description || '').replace(/"/g, '""')}"`,
+                      `"${(link.category || '').replace(/"/g, '""')}"`,
+                      `"${(link.keywords || '').replace(/"/g, '""')}"`,
+                      link.favorite ? 'Yes' : 'No',
+                      `"${link.created_at}"`
+                  ].join(',');
+              })
+          ].join('\n');
+          
+          const blob = new Blob([csvContent], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `credlyst-export-${new Date().toISOString().split("T")[0]}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+      } else if (format === 'pdf') {
+          const { jsPDF } = await import('jspdf');
+          const doc = new jsPDF();
+          doc.setFontSize(16);
+          doc.text("Credlyst Links Export", 14, 20);
+          let y = 35;
+          links.forEach((link, i) => {
+              if (y > 270) {
+                  doc.addPage();
+                  y = 20;
+              }
+              doc.setFontSize(12);
+              doc.text(`${i + 1}. ${link.title || 'Untitled'}`, 14, y);
+              doc.setFontSize(10);
+              doc.text(`URL: ${link.url}`, 14, y + 6);
+              doc.text(`Category: ${link.category} | Favorite: ${link.favorite ? 'Yes' : 'No'}`, 14, y + 12);
+              y += 24;
+          });
+          doc.save(`credlyst-export-${new Date().toISOString().split("T")[0]}.pdf`);
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Failed to export data");
     }
+  }
 
-    async exportData() {
-        try {
-            const links = await linkManager.getAllLinks();
-            const data = {
-                links,
-                categories: this.categories,
-                exportDate: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `credlyst-export-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Export failed:', error);
-            alert('Failed to export data');
-        }
-    }
+  renderLinkCard(link) {
+    const description = link.description || "No description provided.";
+    const domain = new URL(link.url).hostname;
+    const iconInitial = domain.charAt(0).toUpperCase();
 
-    async clearAllData() {
+    const iconEdit = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+    const iconTrash = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+    const iconCopy = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    const iconExternal = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
 
-        const confirmed = await this.showConfirmModal(
-            'Clear All Data', 
-            'Are you sure you want to delete ALL your links and categories?<br><br><b>This action cannot be undone and will permanently delete everything.</b>',
-            'Delete Everything'
-        );
-        
-        if (!confirmed) return;
-        
-        try {
-            const links = await linkManager.getAllLinks();
-            for (const link of links) {
-                await linkManager.deleteLink(link.id);
-            }
-            
-            localStorage.removeItem('custom_categories');
-            
-            await this.loadCategories();
-            this.currentView = 'all';
-            this.loadView();
-            
-            alert('All data has been cleared successfully.');
-        } catch (error) {
-            console.error('Clear data failed:', error);
-            alert('Failed to clear data');
-        }
-    }
+    // Star icon - filled if favorite, outline if not
+    const iconStar = link.favorite
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
 
-
-    renderLinkCard(link) {
-        const description = link.description || 'No description provided.';
-        const domain = new URL(link.url).hostname;
-        const iconInitial = domain.charAt(0).toUpperCase();
-        
-        const iconEdit = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-        const iconTrash = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
-        const iconCopy = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        const iconExternal = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
-        
-        // Star icon - filled if favorite, outline if not
-        const iconStar = link.favorite 
-            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
-            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
-
-        return `
+    return `
             <div class="link-card">
                 <div class="card-header">
                     <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${domain}" class="link-favicon" onerror="this.src='https://www.google.com/s2/favicons?domain=example.com&sz=64'">
                     <div class="actions">
-                        <button class="btn-icon-sm favorite-btn ${link.favorite ? 'active' : ''}" onclick="app.toggleFavorite('${link.id}', ${!link.favorite})" title="${link.favorite ? 'Remove from favorites' : 'Add to favorites'}">
+                        <button class="btn-icon-sm favorite-btn ${link.favorite ? "active" : ""}" onclick="app.toggleFavorite('${link.id}', ${!link.favorite})" title="${link.favorite ? "Remove from favorites" : "Add to favorites"}">
                             ${iconStar}
                         </button>
                         <button class="btn-icon-sm" onclick="window.open('${link.url}', '_blank')" title="Open Link">${iconExternal}</button>
@@ -1286,19 +1718,19 @@ class App {
                 </div>
             </div>
         `;
-    }
-    
-    async showAddLinkModal() {
-        // ALWAYS load categories before building dropdown to reflect newly added categories
-        await this.loadCategories();
+  }
 
-        // Build category dropdown options
-        const categoryOptions = this.categories.map(cat => 
-            `<option value="${cat.category}">${cat.category}</option>`
-        ).join('');
+  async showAddLinkModal() {
+    // ALWAYS load categories before building dropdown to reflect newly added categories
+    await this.loadCategories();
 
-        const modalContainer = document.getElementById('modal-container');
-        modalContainer.innerHTML = `
+    // Build category dropdown options
+    const categoryOptions = this.categories
+      .map((cat) => `<option value="${cat.category}">${cat.category}</option>`)
+      .join("");
+
+    const modalContainer = document.getElementById("modal-container");
+    modalContainer.innerHTML = `
             <div class="modal-overlay">
                 <div class="modal">
                     <div class="modal-header">
@@ -1337,46 +1769,50 @@ class App {
                 </div>
             </div>
         `;
-        
-        modalContainer.querySelector('.close-modal').onclick = () => modalContainer.innerHTML = '';
-        
-        document.getElementById('add-link-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-            if (!formData.get('category')) {
-                alert('Please select a category');
-                return;
-            }
-            
-            await linkManager.addLink({
-                title: formData.get('title'),
-                url: formData.get('url'),
-                description: formData.get('desc'),
-                category: formData.get('category'),
-            });
-            modalContainer.innerHTML = '';
-            toast.success('Link added successfully!');
-            await this.loadCategories();
-            await this.loadView();
-        };
-    }
 
-    async showEditLinkModal(id) {
-        // Always refresh categories to ensure we have the latest list
-        await this.loadCategories();
-        console.log('Categories loaded for edit:', this.categories);
+    modalContainer.querySelector(".close-modal").onclick = () =>
+      (modalContainer.innerHTML = "");
 
-        const links = await linkManager.getAllLinks();
-        const link = links.find(l => l.id === id);
-        if (!link) return;
+    document.getElementById("add-link-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
 
-        const categoryOptions = this.categories.map(cat => 
-            `<option value="${cat.category}" ${link.category === cat.category ? 'selected' : ''}>${cat.category}</option>`
-        ).join('');
+      if (!formData.get("category")) {
+        alert("Please select a category");
+        return;
+      }
 
-        const modalContainer = document.getElementById('modal-container');
-        modalContainer.innerHTML = `
+      await linkManager.addLink({
+        title: formData.get("title"),
+        url: formData.get("url"),
+        description: formData.get("desc"),
+        category: formData.get("category"),
+      });
+      modalContainer.innerHTML = "";
+      toast.success("Link added successfully!");
+      await this.loadCategories();
+      await this.loadView();
+    };
+  }
+
+  async showEditLinkModal(id) {
+    // Always refresh categories to ensure we have the latest list
+    await this.loadCategories();
+    console.log("Categories loaded for edit:", this.categories);
+
+    const links = await linkManager.getAllLinks();
+    const link = links.find((l) => l.id === id);
+    if (!link) return;
+
+    const categoryOptions = this.categories
+      .map(
+        (cat) =>
+          `<option value="${cat.category}" ${link.category === cat.category ? "selected" : ""}>${cat.category}</option>`,
+      )
+      .join("");
+
+    const modalContainer = document.getElementById("modal-container");
+    modalContainer.innerHTML = `
             <div class="modal-overlay">
                 <div class="modal">
                     <div class="modal-header">
@@ -1408,51 +1844,52 @@ class App {
                         </div>
                         <div class="form-group">
                             <label>Description</label>
-                            <textarea name="desc" rows="3">${link.description || ''}</textarea>
+                            <textarea name="desc" rows="3">${link.description || ""}</textarea>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
                     </form>
                 </div>
             </div>
         `;
-        
-        modalContainer.querySelector('.close-modal').onclick = () => modalContainer.innerHTML = '';
-        
-        document.getElementById('edit-link-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-             if (!formData.get('category')) {
-                toast.error('Please select a category');
-                return;
-            }
 
-            try {
-                await linkManager.updateLink(id, {
-                    ...link,
-                    title: formData.get('title'),
-                    url: formData.get('url'),
-                    description: formData.get('desc'),
-                     category: formData.get('category')
-                });
-                
-                modalContainer.innerHTML = '';
-                toast.success('Link updated successfully!');
-                await this.loadCategories(); 
-                await this.loadView();
-            } catch (error) {
-                console.error('Failed to update link:', error);
-                toast.error('Failed to update link');
-            }
-        };
-    }
+    modalContainer.querySelector(".close-modal").onclick = () =>
+      (modalContainer.innerHTML = "");
 
-    showConfirmModal(title, message, confirmText = 'Delete', type = 'danger') {
-        return new Promise((resolve) => {
-            const modalContainer = document.getElementById('modal-container');
-            const btnClass = type === 'danger' ? 'btn-danger' : 'btn-primary';
-            
-            modalContainer.innerHTML = `
+    document.getElementById("edit-link-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      if (!formData.get("category")) {
+        toast.error("Please select a category");
+        return;
+      }
+
+      try {
+        await linkManager.updateLink(id, {
+          ...link,
+          title: formData.get("title"),
+          url: formData.get("url"),
+          description: formData.get("desc"),
+          category: formData.get("category"),
+        });
+
+        modalContainer.innerHTML = "";
+        toast.success("Link updated successfully!");
+        await this.loadCategories();
+        await this.loadView();
+      } catch (error) {
+        console.error("Failed to update link:", error);
+        toast.error("Failed to update link");
+      }
+    };
+  }
+
+  showConfirmModal(title, message, confirmText = "Delete", type = "danger") {
+    return new Promise((resolve) => {
+      const modalContainer = document.getElementById("modal-container");
+      const btnClass = type === "danger" ? "btn-danger" : "btn-primary";
+
+      modalContainer.innerHTML = `
                 <div class="modal-overlay">
                     <div class="modal" style="max-width: 400px;">
                         <div class="modal-header" style="border-bottom: none; margin-bottom: 0.5rem; padding-bottom: 0;">
@@ -1471,78 +1908,83 @@ class App {
                     </div>
                 </div>
             `;
-            
-            // Focus confirm button for quick action
-            const confirmBtn = modalContainer.querySelector('.confirm-btn');
-            confirmBtn.focus();
 
-            const close = () => {
-                modalContainer.innerHTML = '';
-                resolve(false);
-            };
+      // Focus confirm button for quick action
+      const confirmBtn = modalContainer.querySelector(".confirm-btn");
+      confirmBtn.focus();
 
-            modalContainer.querySelector('.close-modal').onclick = close;
-            modalContainer.querySelector('.cancel-btn').onclick = close;
-            
-            confirmBtn.onclick = () => {
-                modalContainer.innerHTML = '';
-                resolve(true);
-            };
-            
-            // Close on background click
-            modalContainer.querySelector('.modal-overlay').onclick = (e) => {
-                if (e.target === modalContainer.querySelector('.modal-overlay')) close();
-            };
-        });
+      const close = () => {
+        modalContainer.innerHTML = "";
+        resolve(false);
+      };
+
+      modalContainer.querySelector(".close-modal").onclick = close;
+      modalContainer.querySelector(".cancel-btn").onclick = close;
+
+      confirmBtn.onclick = () => {
+        modalContainer.innerHTML = "";
+        resolve(true);
+      };
+
+      // Close on background click
+      modalContainer.querySelector(".modal-overlay").onclick = (e) => {
+        if (e.target === modalContainer.querySelector(".modal-overlay"))
+          close();
+      };
+    });
+  }
+
+  async deleteLink(id) {
+    const confirmed = await this.showConfirmModal(
+      "Delete Link",
+      "Are you sure you want to delete this link? This action cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
+    await linkManager.deleteLink(id);
+    toast.success("Link deleted successfully!");
+    await this.loadCategories();
+    await this.loadView();
+  }
+
+  async toggleFavorite(id, newFavoriteState) {
+    try {
+      const links = await linkManager.getAllLinks();
+      const link = links.find((l) => l.id === id);
+      if (!link) return;
+
+      await linkManager.updateLink(id, {
+        ...link,
+        favorite: newFavoriteState ? 1 : 0,
+      });
+
+      toast.success(
+        newFavoriteState ? "Added to favorites!" : "Removed from favorites!",
+      );
+      await this.loadView();
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
     }
+  }
 
-    async deleteLink(id) {
-        const confirmed = await this.showConfirmModal(
-            'Delete Link', 
-            'Are you sure you want to delete this link? This action cannot be undone.'
-        );
-        
-        if (!confirmed) return;
-        
-        await linkManager.deleteLink(id);
-        toast.success('Link deleted successfully!');
-        await this.loadCategories();
-        await this.loadView();
+  async copyLink(url) {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy:", error);
+      toast.error("Failed to copy link");
     }
+  }
 
-    async toggleFavorite(id, newFavoriteState) {
-        try {
-            const links = await linkManager.getAllLinks();
-            const link = links.find(l => l.id === id);
-            if (!link) return;
+  showManageCategoriesModal() {
+    const modalContainer = document.getElementById("modal-container");
 
-            await linkManager.updateLink(id, {
-                ...link,
-                favorite: newFavoriteState ? 1 : 0
-            });
-
-            toast.success(newFavoriteState ? 'Added to favorites!' : 'Removed from favorites!');
-            await this.loadView();
-        } catch (error) {
-            console.error('Failed to toggle favorite:', error);
-        }
-    }
-
-    async copyLink(url) {
-        try {
-            await navigator.clipboard.writeText(url);
-            toast.success('Link copied to clipboard!');
-        } catch (error) {
-            console.error('Failed to copy:', error);
-            toast.error('Failed to copy link');
-        }
-    }
-
-    showManageCategoriesModal() {
-        const modalContainer = document.getElementById('modal-container');
-        
-        // Render existing categories
-        const categoriesList = this.categories.map(cat => `
+    // Render existing categories
+    const categoriesList = this.categories
+      .map(
+        (cat) => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 0.5rem;">
                 <div>
                     <strong>${cat.category}</strong>
@@ -1552,9 +1994,11 @@ class App {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
-        `).join('');
+        `,
+      )
+      .join("");
 
-        modalContainer.innerHTML = `
+    modalContainer.innerHTML = `
             <div class="modal-overlay">
                 <div class="modal">
                     <div class="modal-header">
@@ -1579,90 +2023,103 @@ class App {
                 </div>
             </div>
         `;
-        
-        modalContainer.querySelector('.close-modal').onclick = () => modalContainer.innerHTML = '';
-        
-        // Handle category creation
-        document.getElementById('create-category-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const categoryName = formData.get('categoryName').trim();
-            
-            if (!categoryName) return;
-            
-            // Check if category already exists
-            if (this.categories.some(c => c.category.toLowerCase() === categoryName.toLowerCase())) {
-                alert('This category already exists!');
-                return;
-            }
-            
-            // Create a dummy link with this category to register it
-            // (In a real app, you'd have a dedicated categories table)
-            // For now, we'll just close and it will appear when a link uses it
-            alert(`Category "${categoryName}" will be available once you add a link with it.`);
-            e.target.reset();
-            
-            // Alternative: You could store categories in localStorage as a workaround
-            const storedCategories = JSON.parse(localStorage.getItem('custom_categories') || '[]');
-            if (!storedCategories.includes(categoryName)) {
-                storedCategories.push(categoryName);
-                localStorage.setItem('custom_categories', JSON.stringify(storedCategories));
-                await this.loadCategories();
-                this.showManageCategoriesModal(); // Refresh modal
-            }
-        };
-    }
 
-    async deleteCategory(categoryName) {
+    modalContainer.querySelector(".close-modal").onclick = () =>
+      (modalContainer.innerHTML = "");
 
-        const confirmed = await this.showConfirmModal(
-            'Delete Category', 
-            `Delete category "${categoryName}"?<br><br>This will move all links in this category to "Uncategorized".`
+    // Handle category creation
+    document.getElementById("create-category-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const categoryName = formData.get("categoryName").trim();
+
+      if (!categoryName) return;
+
+      // Check if category already exists
+      if (
+        this.categories.some(
+          (c) => c.category.toLowerCase() === categoryName.toLowerCase(),
+        )
+      ) {
+        alert("This category already exists!");
+        return;
+      }
+
+      // Create a dummy link with this category to register it
+      // (In a real app, you'd have a dedicated categories table)
+      // For now, we'll just close and it will appear when a link uses it
+      alert(
+        `Category "${categoryName}" will be available once you add a link with it.`,
+      );
+      e.target.reset();
+
+      // Alternative: You could store categories in localStorage as a workaround
+      const storedCategories = JSON.parse(
+        localStorage.getItem("custom_categories") || "[]",
+      );
+      if (!storedCategories.includes(categoryName)) {
+        storedCategories.push(categoryName);
+        localStorage.setItem(
+          "custom_categories",
+          JSON.stringify(storedCategories),
         );
-        
-        if (!confirmed) return;
-        
-        try {
-            const links = await linkManager.getAllLinks();
-            const linksToUpdate = links.filter(l => l.category === categoryName);
-            
-            for (const link of linksToUpdate) {
-                await linkManager.updateLink(link.id, {
-                    ...link,
-                    category: 'Uncategorized'
-                });
-            }
-            
-            // Remove from localStorage
-            const storedCategories = JSON.parse(localStorage.getItem('custom_categories') || '[]');
-            const updated = storedCategories.filter(c => c !== categoryName);
-            localStorage.setItem('custom_categories', JSON.stringify(updated));
-            
-            await this.loadCategories();
-            
-            // Check if we're on categories page or manage modal
-            if (this.currentView === 'categories-page') {
-                this.renderCategoriesPage();
-            } else {
-                this.showManageCategoriesModal();
-            }
-            
-            await this.loadView();
-        } catch (error) {
-            console.error('Failed to delete category:', error);
-            alert('Failed to delete category. Please try again.');
-        }
+        await this.loadCategories();
+        this.showManageCategoriesModal(); // Refresh modal
+      }
+    };
+  }
+
+  async deleteCategory(categoryName) {
+    const confirmed = await this.showConfirmModal(
+      "Delete Category",
+      `Delete category "${categoryName}"?<br><br>This will move all links in this category to "Uncategorized".`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const links = await linkManager.getAllLinks();
+      const linksToUpdate = links.filter((l) => l.category === categoryName);
+
+      for (const link of linksToUpdate) {
+        await linkManager.updateLink(link.id, {
+          ...link,
+          category: "Uncategorized",
+        });
+      }
+
+      // Remove from localStorage
+      const storedCategories = JSON.parse(
+        localStorage.getItem("custom_categories") || "[]",
+      );
+      const updated = storedCategories.filter((c) => c !== categoryName);
+      localStorage.setItem("custom_categories", JSON.stringify(updated));
+
+      await this.loadCategories();
+
+      // Check if we're on categories page or manage modal
+      if (this.currentView === "categories-page") {
+        this.renderCategoriesPage();
+      } else {
+        this.showManageCategoriesModal();
+      }
+
+      await this.loadView();
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+      alert("Failed to delete category. Please try again.");
     }
+  }
 }
 
 // Helper to generate consistent colors from strings
 function stringToColor(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return '#' + '00000'.substring(0, 6 - c.length) + c;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+  return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
 const app = new App();
