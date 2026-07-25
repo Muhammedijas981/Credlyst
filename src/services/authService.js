@@ -36,6 +36,20 @@ export class AuthService {
   }
 
   async initAuth() {
+    // Listen for auth changes EARLY to catch events during initialization
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        this.isRecovery = true;
+        if (this.recoveryCallback) this.recoveryCallback(session);
+      }
+      if (session) {
+        this.currentUser = session.user;
+        this.saveCurrentSessionLocally(session);
+      } else {
+        this.currentUser = null;
+      }
+    });
+
     // Get current session
     const {
       data: { session },
@@ -44,16 +58,13 @@ export class AuthService {
       this.currentUser = session.user;
       this.saveCurrentSessionLocally(session);
     }
+  }
 
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        this.currentUser = session.user;
-        this.saveCurrentSessionLocally(session);
-      } else {
-        this.currentUser = null;
-      }
-    });
+  onPasswordRecovery(callback) {
+    this.recoveryCallback = callback;
+    if (this.isRecovery) {
+      callback(this.currentUser);
+    }
   }
 
   async switchAccount(accountObj) {
@@ -178,53 +189,12 @@ export class AuthService {
     }
   }
 
-  async initializePasswordRecoveryFromUrl() {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const hash = window.location.hash
-        ? window.location.hash.substring(1)
-        : "";
-      const hashParams = new URLSearchParams(hash);
-      const isRecovery =
-        params.get("type") === "recovery" ||
-        hashParams.get("type") === "recovery";
-      const accessToken =
-        hashParams.get("access_token") || params.get("access_token");
-      const refreshToken =
-        hashParams.get("refresh_token") || params.get("refresh_token");
-
-      if (accessToken && refreshToken) {
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error) throw error;
-
-        if (data.session?.user) {
-          this.currentUser = data.session.user;
-          return { shouldShowResetPage: true };
-        }
+  onPasswordRecovery(callback) {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        callback(session);
       }
-
-      if (isRecovery) {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        if (session?.user) {
-          this.currentUser = session.user;
-          return { shouldShowResetPage: true };
-        }
-      }
-
-      return { shouldShowResetPage: false };
-    } catch (error) {
-      console.error("Password recovery initialization failed:", error);
-      return { shouldShowResetPage: false, error: error.message };
-    }
+    });
   }
 
   async updateProfile({ name, email, avatar_url }) {

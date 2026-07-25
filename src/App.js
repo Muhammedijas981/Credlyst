@@ -27,16 +27,17 @@ class App {
   async init() {
     try {
       await authService.initPromise;
-      const recoveryState =
-        await authService.initializePasswordRecoveryFromUrl();
 
-      if (recoveryState?.shouldShowResetPage) {
+      authService.onPasswordRecovery((session) => {
         this.currentPage = "reset-password";
-      } else if (authService.isAuthenticated) {
+        this.render();
+      });
+
+      if (authService.isAuthenticated && this.currentPage !== "reset-password") {
         this.currentPage = "dashboard";
         this.user = authService.getCurrentUser();
         this.accounts = authService.accounts;
-      } else if (window.innerWidth <= 768) {
+      } else if (window.innerWidth <= 768 && this.currentPage !== "reset-password") {
         this.currentPage = "login";
       }
 
