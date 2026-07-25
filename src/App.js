@@ -28,12 +28,19 @@ class App {
     try {
       await authService.initPromise;
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const isResetView = urlParams.get("view") === "reset-password";
+
       authService.onPasswordRecovery((session) => {
         this.currentPage = "reset-password";
         this.render();
       });
 
-      if (authService.isAuthenticated && this.currentPage !== "reset-password") {
+      if (isResetView || authService.isRecovery) {
+        this.currentPage = "reset-password";
+        // Clean up the URL so a refresh doesn't trap them here
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (authService.isAuthenticated && this.currentPage !== "reset-password") {
         this.currentPage = "dashboard";
         this.user = authService.getCurrentUser();
         this.accounts = authService.accounts;
