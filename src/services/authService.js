@@ -189,13 +189,6 @@ export class AuthService {
     }
   }
 
-  onPasswordRecovery(callback) {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        callback(session);
-      }
-    });
-  }
 
   async updateProfile({ name, email, avatar_url }) {
     try {
