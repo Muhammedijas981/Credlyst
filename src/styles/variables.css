@@ -51,15 +51,28 @@
 }
 
 [data-theme="dark"] {
-    --bg-body: #0f172a;
-    --bg-card: #1e293b;
-    --bg-sidebar: #1e293b;
+    /* Main Backgrounds: True Dark instead of deep blue */
+    --bg-body: #121212;
+    --bg-card: #1e1e1e;
+    --bg-sidebar: #1e1e1e;
     
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    /* Primary color override: Dark */
+    --color-primary: #27272a;
+    --color-primary-hover: #3f3f46;
+    --color-primary-bg: #18181b;
     
-    --border-color: #334155;
-    --color-slate-50: #0f172a;
+    /* Secondary / Brand override: Grey instead of blue */
+    --color-brand: #71717a;
+    --color-brand-dark: #a1a1aa;
+    --color-brand-light: #27272a;
+    
+    /* Text: White */
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    
+    /* Borders */
+    --border-color: #3f3f46;
+    --color-slate-50: #121212;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }

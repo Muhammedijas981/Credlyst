@@ -202,7 +202,7 @@ p {
 }
 
 .btn-white {
-    background: white;
+    background: var(--bg-card);
     color: var(--color-brand);
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
@@ -287,7 +287,7 @@ textarea {
     font-size: 0.9rem;
     font-family: inherit;
     transition: all 0.15s ease;
-    background: white;
+    background: var(--bg-card);
     color: var(--text-primary);
 }
 
@@ -331,7 +331,7 @@ select {
     border-radius: var(--radius-md);
     font-size: 0.9rem;
     font-family: inherit;
-    background: white;
+    background: var(--bg-card);
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.15s ease;
@@ -363,7 +363,7 @@ textarea::placeholder {
 
 select option {
     padding: 0.75rem;
-    background: white;
+    background: var(--bg-card);
     color: var(--text-primary);
 }
 
@@ -390,7 +390,7 @@ select option:hover {
 
 /* === HEADER === */
 .landing-header {
-    background: white;
+    background: var(--bg-card);
     border-bottom: 1px solid #E2E8F0;
     padding: 1.25rem 2rem;
     position: sticky;
@@ -492,7 +492,7 @@ select option:hover {
 .hero-brand-pill {
     display: inline-flex;
     align-items: center;
-    background: white;
+    background: var(--bg-card);
     padding: 4px 14px 4px 4px;
     border-radius: 100px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -593,7 +593,7 @@ select option:hover {
 }
 
 .btn-white {
-    background: white;
+    background: var(--bg-card);
     color: #0F172A;
     border: 1px solid #E2E8F0;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -618,7 +618,7 @@ select option:hover {
 }
 
 .feature-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: 16px;
     padding: 32px 24px 24px;
     box-shadow: 
@@ -739,7 +739,7 @@ select option:hover {
     align-items: center;
     gap: 8px;
     padding: 8px 14px;
-    background: white;
+    background: var(--bg-card);
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -763,7 +763,7 @@ select option:hover {
 }
 
 .testimonial-card {
-    background: white;
+    background: var(--bg-card);
     padding: 28px;
     border-radius: 16px;
     box-shadow: 
@@ -1107,7 +1107,7 @@ select option:hover {
 
 .search-wrapper input {
     padding-left: 3rem;
-    background: white;
+    background: var(--bg-card);
     border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
@@ -1152,7 +1152,7 @@ select option:hover {
 }
 
 .link-card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 1.25rem;
@@ -1185,7 +1185,7 @@ select option:hover {
     height: 48px;
     border-radius: 12px;
     object-fit: contain;
-    background: white;
+    background: var(--bg-card);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     border: 1px solid var(--border-color);
     /* For the text fallback if needed */
@@ -1319,12 +1319,12 @@ select option:hover {
 
 .btn-copy:hover {
     color: var(--color-brand);
-    background: white;
+    background: var(--bg-card);
 }
 
 /* Category Cards */
 .category-card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
@@ -1420,7 +1420,7 @@ select option:hover {
 }
 
 .settings-card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 2rem;
@@ -1470,7 +1470,7 @@ select option:hover {
 }
 
 .auth-card {
-    background: white;
+    background: var(--bg-card);
     padding: 2.5rem 2rem;
     border-radius: var(--radius-lg);
     box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.05);
@@ -1553,7 +1553,7 @@ select option:hover {
     align-items: center;
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #E5E7EB;
-    background: white;
+    background: var(--bg-card);
     flex-shrink: 0;
 }
 
@@ -1633,7 +1633,7 @@ select option:hover {
     font-size: 0.875rem;
     font-family: inherit;
     transition: all 0.15s ease;
-    background: white;
+    background: var(--bg-card);
     color: #111827;
 }
 
@@ -1821,7 +1821,7 @@ select option:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--bg-card);
     border-top: 1px solid var(--border-color);
     padding: 0.5rem 0;
     z-index: 100;
@@ -1869,7 +1869,7 @@ select option:hover {
     display: none;
     position: sticky;
     top: 0;
-    background: white;
+    background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 1.25rem;
     z-index: 99;
@@ -2051,7 +2051,7 @@ select option:hover {
         top: 100%;
         right: 0;
         margin-top: 0.5rem;
-        background: white;
+        background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);

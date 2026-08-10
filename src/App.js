@@ -64,8 +64,22 @@ class App {
     setTimeout(() => loading?.remove(), 300);
   }
 
+  toggleTheme() {
+    this.theme = this.theme === "light" ? "dark" : "light";
+    localStorage.setItem("theme", this.theme);
+    this.applyTheme();
+  }
+
   applyTheme() {
     document.documentElement.setAttribute("data-theme", this.theme);
+    const themeBtnSvg = document.querySelector("#theme-toggle-btn svg");
+    if (themeBtnSvg) {
+        if (this.theme === "dark") {
+            themeBtnSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+        } else {
+            themeBtnSvg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+        }
+    }
   }
 
   render() {
@@ -93,6 +107,7 @@ class App {
     }
 
     this.setupDynamicListeners();
+    this.applyTheme(); // Ensure theme UI elements are updated after render
   }
 
   // --- VIEW RENDERERS ---
@@ -480,10 +495,19 @@ class App {
                             ${iconSearch}
                             <input type="text" id="global-search" placeholder="Search links...">
                         </div>
-                        <button class="btn btn-primary" id="add-link-btn" style="font-weight: 500;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            New Link
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="theme-toggle-btn" class="btn btn-outline" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center;" aria-label="Toggle theme" title="Toggle theme">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
+                            </button>
+                            <button class="btn btn-outline" id="smart-paste-btn" style="font-weight: 500;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                Smart Paste
+                            </button>
+                            <button class="btn btn-primary" id="add-link-btn" style="font-weight: 500;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                New Link
+                            </button>
+                        </div>
                     </header>
 
                     <div class="content-scroll">
@@ -806,6 +830,16 @@ class App {
       document
         .getElementById("add-link-btn")
         ?.addEventListener("click", () => this.showAddLinkModal());
+        
+      // Smart Paste (Desktop)
+      document
+        .getElementById("smart-paste-btn")
+        ?.addEventListener("click", () => this.showSmartPasteModal());
+
+      // Theme Toggle
+      document
+        .getElementById("theme-toggle-btn")
+        ?.addEventListener("click", () => this.toggleTheme());
 
       // Mobile FAB
       document
@@ -1769,6 +1803,124 @@ class App {
                 </div>
             </div>
         `;
+  }
+
+  async showSmartPasteModal() {
+    const modalContainer = document.getElementById("modal-container");
+    
+    modalContainer.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2>Smart Paste & Auto-Categorize</h2>
+                    <button class="close-modal">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Paste a block of text containing one or more URLs. We'll automatically extract the URLs, fetch their content, and categorize them using AI.</p>
+                </div>
+                <form id="smart-paste-form">
+                    <div class="form-group">
+                        <textarea name="pasteText" required placeholder="Paste text with links here..." rows="6" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface); color: var(--text-primary); resize: vertical;"></textarea>
+                    </div>
+                    <div id="smart-paste-progress" style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;"></div>
+                    <button type="submit" class="btn btn-primary btn-block" id="smart-paste-submit">Extract & Categorize</button>
+                </form>
+            </div>
+        </div>
+    `;
+
+    modalContainer.querySelector(".close-modal").onclick = () => (modalContainer.innerHTML = "");
+
+    document.getElementById("smart-paste-form").onsubmit = async (e) => {
+        e.preventDefault();
+        const text = e.target.pasteText.value;
+        const submitBtn = document.getElementById("smart-paste-submit");
+        const progressDiv = document.getElementById("smart-paste-progress");
+        
+        // Extract URLs using regex
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urls = text.match(urlRegex) || [];
+        
+        if (urls.length === 0) {
+            toast.error("No URLs found in the pasted text.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        
+        let successCount = 0;
+        
+        for (let i = 0; i < urls.length; i++) {
+            const url = urls[i];
+            progressDiv.innerHTML = `Processing ${i + 1} of ${urls.length}: <br/><span style="opacity: 0.7; font-size: 0.8rem;">${url}</span>`;
+            
+            try {
+                const res = await fetch('/api/parse-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (res.ok) {
+                    const metadata = await res.json();
+                    
+                    // Use the resolved URL if available (e.g. short links like lnkd.in -> linkedin.com/...)
+                    const finalUrl = metadata.resolvedUrl || url;
+                    console.log('Smart Paste URL resolution:', { original: url, resolved: metadata.resolvedUrl, saving: finalUrl });
+                    
+                    // Add link to database
+                    await linkManager.addLink({
+                        title: metadata.title || new URL(finalUrl).hostname,
+                        url: finalUrl,
+                        description: metadata.description || '',
+                        category: metadata.category || 'Uncategorized',
+                    });
+                    successCount++;
+                } else {
+                    console.error("Failed to parse URL:", url, res.statusText);
+                    // Fallback to basic link addition if serverless function fails entirely
+                    await linkManager.addLink({
+                        title: new URL(url).hostname,
+                        url: url,
+                        description: '',
+                        category: 'Uncategorized',
+                    });
+                    successCount++;
+                }
+            } catch (error) {
+                console.error("Error processing URL:", url, error);
+                try {
+                    await linkManager.addLink({
+                        title: new URL(url).hostname,
+                        url: url,
+                        description: '',
+                        category: 'Uncategorized',
+                    });
+                    successCount++;
+                } catch (e) {
+                   // Ignore if even basic addition fails (e.g. invalid URL)
+                }
+            }
+        }
+        
+        progressDiv.innerHTML = "";
+        submitBtn.disabled = false;
+        
+        if (successCount > 0) {
+            toast.success(`Successfully extracted and added ${successCount} ${successCount === 1 ? 'link' : 'links'}!`);
+        } else {
+            toast.error("Failed to add any links.");
+        }
+        
+        modalContainer.innerHTML = "";
+        await this.loadCategories();
+        await this.loadView();
+    };
   }
 
   async showAddLinkModal() {
