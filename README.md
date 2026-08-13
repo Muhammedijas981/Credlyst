@@ -27,12 +27,15 @@ Keeping dozens of tabs open doesn't just clutter your browser—it eats system m
 ## 🚀 Platform Availability
 
 ### 🌐 Web App
+
 Live and ready to use: **[credlyst.ijas.space](https://credlyst.ijas.space/)**
 
 ### 🧩 Chrome Extension
+
 Built for speed and seamless integration. Save and search links without leaving your current tab.
 
 ### 📱 Mobile App
+
 Coming soon with full offline support and optimized touch gestures.
 
 > **Note:** While financial constraints have prevented publishing to public stores, I'm happy to share direct builds via email. Reach out if you'd like to try the extension or app!
@@ -83,11 +86,13 @@ credlyst/
 ### Browser Extension Workflow
 
 **Save a link instantly:**
+
 - While viewing any webpage, press `Ctrl+Shift+S` to save the current URL
 - Add a quick title, description, and category
 - Link syncs immediately to your account
 
 **Retrieve a link instantly:**
+
 - Press `Ctrl+Shift+F` to open the search popup
 - Type a keyword to find your link
 - Click to copy and auto-paste directly into your current field
@@ -101,6 +106,7 @@ credlyst/
 5. All changes sync across your devices instantly
 
 ### Mobile App
+
 Access your entire link library on the go with optimized touch controls and offline support.
 
 ## 🎨 Database Schema

@@ -39,12 +39,22 @@ class App {
       if (isResetView || authService.isRecovery) {
         this.currentPage = "reset-password";
         // Clean up the URL so a refresh doesn't trap them here
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (authService.isAuthenticated && this.currentPage !== "reset-password") {
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      } else if (
+        authService.isAuthenticated &&
+        this.currentPage !== "reset-password"
+      ) {
         this.currentPage = "dashboard";
         this.user = authService.getCurrentUser();
         this.accounts = authService.accounts;
-      } else if (window.innerWidth <= 768 && this.currentPage !== "reset-password") {
+      } else if (
+        window.innerWidth <= 768 &&
+        this.currentPage !== "reset-password"
+      ) {
         this.currentPage = "login";
       }
 
@@ -74,11 +84,13 @@ class App {
     document.documentElement.setAttribute("data-theme", this.theme);
     const themeBtnSvg = document.querySelector("#theme-toggle-btn svg");
     if (themeBtnSvg) {
-        if (this.theme === "dark") {
-            themeBtnSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-        } else {
-            themeBtnSvg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-        }
+      if (this.theme === "dark") {
+        themeBtnSvg.innerHTML =
+          '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      } else {
+        themeBtnSvg.innerHTML =
+          '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
     }
   }
 
@@ -503,6 +515,9 @@ class App {
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                                 Smart Paste
                             </button>
+                            <button class="btn btn-outline" id="auto-categorize-btn" style="font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                                ✨ Auto-Categorize All
+                            </button>
                             <button class="btn btn-primary" id="add-link-btn" style="font-weight: 500;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 New Link
@@ -586,13 +601,15 @@ class App {
         const wrapper = e.target.closest(".password-wrapper");
         const input = wrapper.querySelector("input");
         const icon = wrapper.querySelector(".eye-icon");
-        
+
         if (input.type === "password") {
           input.type = "text";
-          icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+          icon.innerHTML =
+            '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
         } else {
           input.type = "password";
-          icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+          icon.innerHTML =
+            '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
         }
       }
       if (action === "add-account") {
@@ -805,7 +822,7 @@ class App {
 
           await authService.updatePassword(newPassword);
           toast.success("Password updated successfully.");
-          
+
           e.target.reset();
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalText;
@@ -830,11 +847,16 @@ class App {
       document
         .getElementById("add-link-btn")
         ?.addEventListener("click", () => this.showAddLinkModal());
-        
+
       // Smart Paste (Desktop)
       document
         .getElementById("smart-paste-btn")
         ?.addEventListener("click", () => this.showSmartPasteModal());
+
+      // Auto-Categorize All
+      document
+        .getElementById("auto-categorize-btn")
+        ?.addEventListener("click", () => this.autoCategorizeAllLinks());
 
       // Theme Toggle
       document
@@ -1271,7 +1293,7 @@ class App {
   renderLinksList(links) {
     const container = document.getElementById("links-grid");
     if (!container) return;
-    
+
     container.className = "cards-grid";
 
     if (links.length === 0) {
@@ -1442,8 +1464,6 @@ class App {
       const formData = new FormData(e.target);
       const categoryName = formData.get("categoryName").trim();
 
-      console.log("Creating category:", categoryName);
-
       if (!categoryName) return;
 
       // Check if exists
@@ -1474,8 +1494,6 @@ class App {
           JSON.stringify(storedCategories),
         );
 
-        console.log("Category saved to localStorage:", storedCategories);
-
         // Close modal
         modalContainer.innerHTML = "";
 
@@ -1484,8 +1502,6 @@ class App {
         // Reload categories and refresh page
         await this.loadCategories();
         this.renderCategoriesPage();
-
-        console.log("Categories page refreshed");
       } catch (error) {
         console.error("Error creating category:", error);
         const errorContainer = document.getElementById("error-message");
@@ -1692,69 +1708,83 @@ class App {
     container.className = "";
   }
 
-  async exportData(format = 'json') {
+  async exportData(format = "json") {
     try {
       const links = await linkManager.getAllLinks();
-      
-      if (format === 'json') {
-          const data = {
-            links,
-            categories: this.categories,
-            exportDate: new Date().toISOString(),
-          };
 
-          const blob = new Blob([JSON.stringify(data, null, 2)], {
-            type: "application/json",
-          });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `credlyst-export-${new Date().toISOString().split("T")[0]}.json`;
-          a.click();
-          URL.revokeObjectURL(url);
-      } else if (format === 'csv') {
-          const headers = ['Title', 'URL', 'Description', 'Category', 'Keywords', 'Favorite', 'Created At'];
-          const csvContent = [
-              headers.join(','),
-              ...links.map(link => {
-                  return [
-                      `"${(link.title || '').replace(/"/g, '""')}"`,
-                      `"${(link.url || '').replace(/"/g, '""')}"`,
-                      `"${(link.description || '').replace(/"/g, '""')}"`,
-                      `"${(link.category || '').replace(/"/g, '""')}"`,
-                      `"${(link.keywords || '').replace(/"/g, '""')}"`,
-                      link.favorite ? 'Yes' : 'No',
-                      `"${link.created_at}"`
-                  ].join(',');
-              })
-          ].join('\n');
-          
-          const blob = new Blob([csvContent], { type: "text/csv" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `credlyst-export-${new Date().toISOString().split("T")[0]}.csv`;
-          a.click();
-          URL.revokeObjectURL(url);
-      } else if (format === 'pdf') {
-          const { jsPDF } = await import('jspdf');
-          const doc = new jsPDF();
-          doc.setFontSize(16);
-          doc.text("Credlyst Links Export", 14, 20);
-          let y = 35;
-          links.forEach((link, i) => {
-              if (y > 270) {
-                  doc.addPage();
-                  y = 20;
-              }
-              doc.setFontSize(12);
-              doc.text(`${i + 1}. ${link.title || 'Untitled'}`, 14, y);
-              doc.setFontSize(10);
-              doc.text(`URL: ${link.url}`, 14, y + 6);
-              doc.text(`Category: ${link.category} | Favorite: ${link.favorite ? 'Yes' : 'No'}`, 14, y + 12);
-              y += 24;
-          });
-          doc.save(`credlyst-export-${new Date().toISOString().split("T")[0]}.pdf`);
+      if (format === "json") {
+        const data = {
+          links,
+          categories: this.categories,
+          exportDate: new Date().toISOString(),
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `credlyst-export-${new Date().toISOString().split("T")[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (format === "csv") {
+        const headers = [
+          "Title",
+          "URL",
+          "Description",
+          "Category",
+          "Keywords",
+          "Favorite",
+          "Created At",
+        ];
+        const csvContent = [
+          headers.join(","),
+          ...links.map((link) => {
+            return [
+              `"${(link.title || "").replace(/"/g, '""')}"`,
+              `"${(link.url || "").replace(/"/g, '""')}"`,
+              `"${(link.description || "").replace(/"/g, '""')}"`,
+              `"${(link.category || "").replace(/"/g, '""')}"`,
+              `"${(link.keywords || "").replace(/"/g, '""')}"`,
+              link.favorite ? "Yes" : "No",
+              `"${link.created_at}"`,
+            ].join(",");
+          }),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `credlyst-export-${new Date().toISOString().split("T")[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (format === "pdf") {
+        const { jsPDF } = await import("jspdf");
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Credlyst Links Export", 14, 20);
+        let y = 35;
+        links.forEach((link, i) => {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.setFontSize(12);
+          doc.text(`${i + 1}. ${link.title || "Untitled"}`, 14, y);
+          doc.setFontSize(10);
+          doc.text(`URL: ${link.url}`, 14, y + 6);
+          doc.text(
+            `Category: ${link.category} | Favorite: ${link.favorite ? "Yes" : "No"}`,
+            14,
+            y + 12,
+          );
+          y += 24;
+        });
+        doc.save(
+          `credlyst-export-${new Date().toISOString().split("T")[0]}.pdf`,
+        );
       }
     } catch (error) {
       console.error("Export failed:", error);
@@ -1807,7 +1837,7 @@ class App {
 
   async showSmartPasteModal() {
     const modalContainer = document.getElementById("modal-container");
-    
+
     modalContainer.innerHTML = `
         <div class="modal-overlay">
             <div class="modal" style="max-width: 600px;">
@@ -1834,93 +1864,224 @@ class App {
         </div>
     `;
 
-    modalContainer.querySelector(".close-modal").onclick = () => (modalContainer.innerHTML = "");
+    modalContainer.querySelector(".close-modal").onclick = () =>
+      (modalContainer.innerHTML = "");
 
     document.getElementById("smart-paste-form").onsubmit = async (e) => {
-        e.preventDefault();
-        const text = e.target.pasteText.value;
-        const submitBtn = document.getElementById("smart-paste-submit");
-        const progressDiv = document.getElementById("smart-paste-progress");
-        
-        // Extract URLs using regex
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const urls = text.match(urlRegex) || [];
-        
-        if (urls.length === 0) {
-            toast.error("No URLs found in the pasted text.");
-            return;
-        }
+      e.preventDefault();
+      const text = e.target.pasteText.value;
+      const submitBtn = document.getElementById("smart-paste-submit");
+      const progressDiv = document.getElementById("smart-paste-progress");
 
-        submitBtn.disabled = true;
-        
-        let successCount = 0;
-        
-        for (let i = 0; i < urls.length; i++) {
-            const url = urls[i];
-            progressDiv.innerHTML = `Processing ${i + 1} of ${urls.length}: <br/><span style="opacity: 0.7; font-size: 0.8rem;">${url}</span>`;
-            
-            try {
-                const res = await fetch('/api/parse-link', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                });
-                
-                if (res.ok) {
-                    const metadata = await res.json();
-                    
-                    // Use the resolved URL if available (e.g. short links like lnkd.in -> linkedin.com/...)
-                    const finalUrl = metadata.resolvedUrl || url;
-                    console.log('Smart Paste URL resolution:', { original: url, resolved: metadata.resolvedUrl, saving: finalUrl });
-                    
-                    // Add link to database
-                    await linkManager.addLink({
-                        title: metadata.title || new URL(finalUrl).hostname,
-                        url: finalUrl,
-                        description: metadata.description || '',
-                        category: metadata.category || 'Uncategorized',
-                    });
-                    successCount++;
-                } else {
-                    console.error("Failed to parse URL:", url, res.statusText);
-                    // Fallback to basic link addition if serverless function fails entirely
-                    await linkManager.addLink({
-                        title: new URL(url).hostname,
-                        url: url,
-                        description: '',
-                        category: 'Uncategorized',
-                    });
-                    successCount++;
-                }
-            } catch (error) {
-                console.error("Error processing URL:", url, error);
-                try {
-                    await linkManager.addLink({
-                        title: new URL(url).hostname,
-                        url: url,
-                        description: '',
-                        category: 'Uncategorized',
-                    });
-                    successCount++;
-                } catch (e) {
-                   // Ignore if even basic addition fails (e.g. invalid URL)
-                }
-            }
+      // Extract URLs using regex
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = text.match(urlRegex) || [];
+
+      if (urls.length === 0) {
+        toast.error("No URLs found in the pasted text.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+
+      let successCount = 0;
+
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        progressDiv.innerHTML = `Processing ${i + 1} of ${urls.length}: <br/><span style="opacity: 0.7; font-size: 0.8rem;">${url}</span>`;
+
+        try {
+          const res = await fetch("/api/parse-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+
+          if (res.ok) {
+            const metadata = await res.json();
+
+            // Use the resolved URL if available (e.g. short links like lnkd.in -> linkedin.com/...)
+            const finalUrl = metadata.resolvedUrl || url;
+
+            // Add link to database
+            await linkManager.addLink({
+              title: metadata.title || new URL(finalUrl).hostname,
+              url: finalUrl,
+              description: metadata.description || "",
+              category: metadata.category || "Uncategorized",
+              keywords: "[ai_processed]",
+            });
+            successCount++;
+          } else {
+            console.error("Failed to parse URL:", url, res.statusText);
+            // Fallback to basic link addition if serverless function fails entirely
+            await linkManager.addLink({
+              title: new URL(url).hostname,
+              url: url,
+              description: "",
+              category: "Uncategorized",
+            });
+            successCount++;
+          }
+        } catch (error) {
+          console.error("Error processing URL:", url, error);
+          try {
+            await linkManager.addLink({
+              title: new URL(url).hostname,
+              url: url,
+              description: "",
+              category: "Uncategorized",
+            });
+            successCount++;
+          } catch (e) {
+            // Ignore if even basic addition fails (e.g. invalid URL)
+          }
         }
-        
-        progressDiv.innerHTML = "";
-        submitBtn.disabled = false;
-        
-        if (successCount > 0) {
-            toast.success(`Successfully extracted and added ${successCount} ${successCount === 1 ? 'link' : 'links'}!`);
-        } else {
-            toast.error("Failed to add any links.");
-        }
-        
-        modalContainer.innerHTML = "";
-        await this.loadCategories();
-        await this.loadView();
+      }
+
+      progressDiv.innerHTML = "";
+      submitBtn.disabled = false;
+
+      if (successCount > 0) {
+        toast.success(
+          `Successfully extracted and added ${successCount} ${successCount === 1 ? "link" : "links"}!`,
+        );
+      } else {
+        toast.error("Failed to add any links.");
+      }
+
+      modalContainer.innerHTML = "";
+      await this.loadCategories();
+      await this.loadView();
     };
+  }
+
+  async autoCategorizeAllLinks() {
+    const links = await linkManager.getAllLinks();
+
+    // Find links that haven't been processed by AI
+    // We determine this by checking if the keywords field contains '[ai_processed]'
+    // Also include any links that are explicitly 'Uncategorized' to catch previous failures
+    const unprocessedLinks = links.filter((link) => {
+      const hasTag = link.keywords?.includes("[ai_processed]");
+      const isUncategorized = link.category === "Uncategorized";
+      return !hasTag || isUncategorized;
+    });
+
+    if (unprocessedLinks.length === 0) {
+      toast.info("All links have already been processed by AI!");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Found ${unprocessedLinks.length} unprocessed links. Do you want to process them now with AI? This may take some time.`,
+      )
+    ) {
+      return;
+    }
+
+    const modalContainer = document.getElementById("modal-container");
+    modalContainer.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal" style="max-width: 500px; text-align: center;">
+                <h2>✨ AI Bulk Categorization</h2>
+                <div style="margin: 2rem 0;">
+                    <div class="spinner-small" style="width: 40px; height: 40px; margin: 0 auto 1rem auto; border-width: 4px;"></div>
+                    <p id="bulk-progress-text" style="font-size: 1.1rem; color: var(--text-primary);">Processing 1 of ${unprocessedLinks.length}...</p>
+                    <p id="bulk-progress-url" style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; word-break: break-all;"></p>
+                </div>
+                <div style="width: 100%; background: var(--border-color); height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div id="bulk-progress-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    let successCount = 0;
+
+    for (let i = 0; i < unprocessedLinks.length; i++) {
+      const link = unprocessedLinks[i];
+
+      document.getElementById("bulk-progress-text").textContent =
+        `Processing ${i + 1} of ${unprocessedLinks.length}...`;
+      document.getElementById("bulk-progress-url").textContent = link.url;
+      document.getElementById("bulk-progress-bar").style.width =
+        `${(i / unprocessedLinks.length) * 100}%`;
+
+      let success = false;
+      let attempts = 0;
+
+      while (!success && attempts < 2) {
+        attempts++;
+        try {
+          const res = await fetch("/api/parse-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: link.url }),
+          });
+
+          if (res.ok) {
+            const metadata = await res.json();
+
+            // Keep existing title if AI didn't provide one
+            const newTitle = metadata.title || link.title;
+            const newDesc = metadata.description || link.description;
+            const newCategory = metadata.category || link.category;
+
+            // Append the ai_processed tag to keywords
+            let newKeywords = (link.keywords || "").trim();
+            if (!newKeywords.includes("[ai_processed]")) {
+              newKeywords = newKeywords
+                ? `${newKeywords} [ai_processed]`
+                : "[ai_processed]";
+            }
+
+            await linkManager.updateLink(link.id, {
+              ...link,
+              title: newTitle,
+              description: newDesc,
+              category: newCategory,
+              keywords: newKeywords,
+            });
+            successCount++;
+            success = true;
+          } else {
+            if (attempts < 2) {
+              document.getElementById("bulk-progress-text").textContent =
+                `Rate limit hit. Waiting 20s before retry...`;
+              await new Promise((r) => setTimeout(r, 20000));
+              document.getElementById("bulk-progress-text").textContent =
+                `Processing ${i + 1} of ${unprocessedLinks.length}...`;
+            }
+          }
+        } catch (error) {
+          console.error("Failed to auto-categorize link:", link.url, error);
+          if (attempts < 2) {
+            await new Promise((r) => setTimeout(r, 5000));
+          }
+        }
+      }
+
+      if (!success) {
+        toast.error(`Failed to categorize: ${link.url}`);
+      }
+
+      // 8-second delay to respect the 6000 Tokens Per Minute limit
+      await new Promise((r) => setTimeout(r, 8000));
+    }
+
+    modalContainer.innerHTML = "";
+
+    if (successCount > 0) {
+      toast.success(
+        `Successfully categorized ${successCount} ${successCount === 1 ? "link" : "links"}!`,
+      );
+      await this.loadCategories();
+      await this.loadView();
+    } else {
+      toast.error("Failed to categorize any links.");
+    }
   }
 
   async showAddLinkModal() {
@@ -1960,12 +2121,15 @@ class App {
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>URL <span class="required">*</span></label>
-                            <input type="url" name="url" required placeholder="https://example.com">
+                            <label style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>URL <span class="required">*</span></span>
+                                <button type="button" id="btn-auto-fill" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; height: auto;">✨ Auto-fill with AI</button>
+                            </label>
+                            <input type="url" name="url" required placeholder="https://example.com" id="add-link-url">
                         </div>
                         <div class="form-group">
                             <label>Description</label>
-                            <textarea name="desc" placeholder="Brief description..." rows="3"></textarea>
+                            <textarea name="desc" placeholder="Brief description..." rows="3" id="add-link-desc"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Add Link</button>
                     </form>
@@ -1976,6 +2140,83 @@ class App {
     modalContainer.querySelector(".close-modal").onclick = () =>
       (modalContainer.innerHTML = "");
 
+    // Auto-fill logic
+    const autoFillBtn = document.getElementById("btn-auto-fill");
+    autoFillBtn.onclick = async () => {
+      const urlInput = document.getElementById("add-link-url");
+      const url = urlInput.value.trim();
+      if (!url) {
+        toast.error("Please enter a URL first.");
+        return;
+      }
+
+      const originalText = autoFillBtn.innerHTML;
+      autoFillBtn.innerHTML = "Processing...";
+      autoFillBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/parse-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+
+        if (res.ok) {
+          const metadata = await res.json();
+
+          // Fill inputs
+          const form = document.getElementById("add-link-form");
+          if (metadata.title) form.title.value = metadata.title;
+          if (metadata.description) form.desc.value = metadata.description;
+          if (metadata.resolvedUrl) form.url.value = metadata.resolvedUrl;
+
+          // Try to select category if it exists in dropdown
+          if (metadata.category) {
+            const categorySelect = form.category;
+            const options = Array.from(categorySelect.options);
+            const optionExists = options.some(
+              (opt) => opt.value === metadata.category,
+            );
+
+            if (optionExists) {
+              categorySelect.value = metadata.category;
+            } else {
+              // If it doesn't exist, we could add it dynamically or just let the user pick
+              // Let's add it dynamically
+              const newOption = new Option(
+                metadata.category,
+                metadata.category,
+              );
+              categorySelect.add(newOption);
+              categorySelect.value = metadata.category;
+            }
+          }
+
+          // Add a hidden input to mark this as AI processed
+          let aiProcessedInput = form.querySelector(
+            'input[name="ai_processed"]',
+          );
+          if (!aiProcessedInput) {
+            aiProcessedInput = document.createElement("input");
+            aiProcessedInput.type = "hidden";
+            aiProcessedInput.name = "ai_processed";
+            form.appendChild(aiProcessedInput);
+          }
+          aiProcessedInput.value = "true";
+
+          toast.success("Successfully auto-filled from URL");
+        } else {
+          toast.error("Failed to parse URL metadata.");
+        }
+      } catch (error) {
+        console.error("Auto-fill error:", error);
+        toast.error("Failed to auto-fill.");
+      } finally {
+        autoFillBtn.innerHTML = originalText;
+        autoFillBtn.disabled = false;
+      }
+    };
+
     document.getElementById("add-link-form").onsubmit = async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
@@ -1985,11 +2226,14 @@ class App {
         return;
       }
 
+      const isAiProcessed = formData.get("ai_processed") === "true";
+
       await linkManager.addLink({
         title: formData.get("title"),
         url: formData.get("url"),
         description: formData.get("desc"),
         category: formData.get("category"),
+        keywords: isAiProcessed ? "[ai_processed]" : "",
       });
       modalContainer.innerHTML = "";
       toast.success("Link added successfully!");
@@ -2001,7 +2245,6 @@ class App {
   async showEditLinkModal(id) {
     // Always refresh categories to ensure we have the latest list
     await this.loadCategories();
-    console.log("Categories loaded for edit:", this.categories);
 
     const links = await linkManager.getAllLinks();
     const link = links.find((l) => l.id === id);

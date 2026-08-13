@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS links (
     keywords TEXT,
     category TEXT DEFAULT 'General',
     favorite BOOLEAN DEFAULT FALSE,
+    ai_processed BOOLEAN DEFAULT FALSE,
     access_count INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),

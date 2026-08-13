@@ -189,7 +189,6 @@ export class AuthService {
     }
   }
 
-
   async updateProfile({ name, email, avatar_url }) {
     try {
       const metadata = { ...(this.currentUser?.user_metadata || {}) };

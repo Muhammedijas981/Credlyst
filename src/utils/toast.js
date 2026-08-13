@@ -1,14 +1,14 @@
 class Toast {
-    constructor() {
-        this.container = null;
-        this.init();
-    }
+  constructor() {
+    this.container = null;
+    this.init();
+  }
 
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.id = 'glass-toast-container';
-            this.container.style.cssText = `
+  init() {
+    if (!this.container) {
+      this.container = document.createElement("div");
+      this.container.id = "glass-toast-container";
+      this.container.style.cssText = `
                 position: fixed;
                 top: 24px;
                 left: 50%;
@@ -21,10 +21,10 @@ class Toast {
                 width: max-content;
                 max-width: calc(100vw - 32px);
             `;
-            document.body.appendChild(this.container);
-            
-            const style = document.createElement('style');
-            style.textContent = `
+      document.body.appendChild(this.container);
+
+      const style = document.createElement("style");
+      style.textContent = `
                 @keyframes slideDownFade {
                     0% { transform: translateY(-20px) scale(0.95); opacity: 0; }
                     100% { transform: translateY(0) scale(1); opacity: 1; }
@@ -74,41 +74,53 @@ class Toast {
                 .toast-info .glass-toast-icon { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
                 .toast-warning .glass-toast-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
             `;
-            document.head.appendChild(style);
-        }
+      document.head.appendChild(style);
     }
+  }
 
-    show(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `glass-toast toast-${type}`;
-        
-        toast.innerHTML = `
+  show(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `glass-toast toast-${type}`;
+
+    toast.innerHTML = `
             <div class="glass-toast-icon">${this.getIcon(type)}</div>
             <div>${message}</div>
         `;
 
-        this.container.prepend(toast);
+    this.container.prepend(toast);
 
-        setTimeout(() => {
-            toast.style.animation = 'fadeOutUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 3500);
-    }
+    setTimeout(() => {
+      toast.style.animation =
+        "fadeOutUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
 
-    getIcon(type) {
-        const icons = {
-            success: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
-            error: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
-            info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
-            warning: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
-        };
-        return icons[type] || icons.info;
-    }
+  getIcon(type) {
+    const icons = {
+      success:
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+      error:
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+      info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+      warning:
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+    };
+    return icons[type] || icons.info;
+  }
 
-    success(message) { this.show(message, 'success'); }
-    error(message) { this.show(message, 'error'); }
-    info(message) { this.show(message, 'info'); }
-    warning(message) { this.show(message, 'warning'); }
+  success(message) {
+    this.show(message, "success");
+  }
+  error(message) {
+    this.show(message, "error");
+  }
+  info(message) {
+    this.show(message, "info");
+  }
+  warning(message) {
+    this.show(message, "warning");
+  }
 }
 
 export default new Toast();
