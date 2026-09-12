@@ -2,11 +2,12 @@ import linkManager from "./services/linkManager.js";
 import searchEngine from "./services/searchEngine.js";
 import authService from "./services/authService.js";
 import toast from "./utils/toast.js";
+import Router from "./router/Router.js";
 
 class App {
   constructor() {
     this.currentPage = "landing";
-    this.currentView = "all"; // all, favorites, recent, or category:{name}
+    this.currentView = "all"; // all, favorites, recent, categories-page, settings, or category:{name}
     this.theme = localStorage.getItem("theme") || "light";
     this.user = authService.currentUser || {
       name: "Sarah D.",
@@ -22,6 +23,114 @@ class App {
           ];
     this.currentAccountIndex = 0;
     this.categories = [];
+
+    window.app = this;
+    this.router = new Router();
+    this.setupRoutes();
+  }
+
+  setupRoutes() {
+    // Route guards
+    this.router.beforeEach((toPath, fromPath, next) => {
+      const cleanPath = toPath.split("?")[0].replace(/\/+$/, "") || "/";
+      const isAuthenticated = authService.isAuthenticated;
+
+      // Guest routes
+      const guestRoutes = ["/landing", "/login", "/signup", "/forgot-password"];
+      const isGuestRoute = guestRoutes.includes(cleanPath);
+
+      // Reset password route
+      if (cleanPath === "/reset-password") {
+        return next();
+      }
+
+      // Root path
+      if (cleanPath === "/") {
+        if (isAuthenticated) {
+          return next();
+        } else {
+          if (window.innerWidth <= 768) {
+            return next("/login");
+          }
+          return next("/landing");
+        }
+      }
+
+      if (isGuestRoute) {
+        if (isAuthenticated) {
+          return next("/");
+        }
+        return next();
+      }
+
+      // Protected dashboard routes
+      if (!isAuthenticated) {
+        return next("/login");
+      }
+
+      next();
+    });
+
+    // Public / Auth routes
+    this.router.addRoute("/landing", () => this.showPage("landing"), { name: "landing" });
+    this.router.addRoute("/login", () => this.showPage("login"), { name: "login" });
+    this.router.addRoute("/signup", () => this.showPage("signup"), { name: "signup" });
+    this.router.addRoute("/forgot-password", () => this.showPage("forgot-password"), { name: "forgot-password" });
+    this.router.addRoute("/reset-password", () => this.showPage("reset-password"), { name: "reset-password" });
+
+    // Dashboard views
+    this.router.addRoute("/", () => this.showDashboardView("all"), { name: "home" });
+    this.router.addRoute("/all", () => this.showDashboardView("all"), { name: "all" });
+    this.router.addRoute("/dashboard", () => this.showDashboardView("all"), { name: "dashboard" });
+    this.router.addRoute("/favorites", () => this.showDashboardView("favorites"), { name: "favorites" });
+    this.router.addRoute("/favorite", () => this.showDashboardView("favorites"), { name: "favorite" });
+    this.router.addRoute("/recent", () => this.showDashboardView("recent"), { name: "recent" });
+    this.router.addRoute("/categories", () => this.showDashboardView("categories-page"), { name: "categories" });
+    this.router.addRoute("/category/:categoryName", (params) => {
+      this.showDashboardView("category:" + (params.categoryName || ""));
+    }, { name: "category" });
+    this.router.addRoute("/settings", () => this.showDashboardView("settings"), { name: "settings" });
+  }
+
+  showPage(pageName) {
+    this.currentPage = pageName;
+    this.render();
+    window.scrollTo(0, 0);
+  }
+
+  async showDashboardView(viewName) {
+    const isDifferentPage = this.currentPage !== "dashboard";
+    this.currentPage = "dashboard";
+    this.currentView = viewName;
+
+    if (authService.isAuthenticated) {
+      this.user = authService.getCurrentUser() || this.user;
+      this.accounts = authService.accounts.length > 0 ? authService.accounts : this.accounts;
+    }
+
+    if (isDifferentPage || !document.getElementById("links-grid")) {
+      this.render();
+    } else {
+      this.updateActiveNavIndicators();
+      await this.loadView();
+    }
+  }
+
+  updateActiveNavIndicators() {
+    document
+      .querySelectorAll(".nav-item, .mobile-nav-item")
+      .forEach((item) => item.classList.remove("active"));
+
+    if (this.currentView.startsWith("category:")) {
+      const catName = this.currentView.replace("category:", "");
+      document
+        .querySelectorAll(`[data-category="${catName}"]`)
+        .forEach((el) => el.classList.add("active"));
+    } else {
+      document
+        .querySelectorAll(`[data-view="${this.currentView}"]`)
+        .forEach((el) => el.classList.add("active"));
+    }
   }
 
   async init() {
@@ -32,36 +141,24 @@ class App {
       const isResetView = urlParams.get("view") === "reset-password";
 
       authService.onPasswordRecovery((session) => {
-        this.currentPage = "reset-password";
-        this.render();
+        this.router.navigate("/reset-password");
       });
 
-      if (isResetView || authService.isRecovery) {
-        this.currentPage = "reset-password";
-        // Clean up the URL so a refresh doesn't trap them here
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname,
-        );
-      } else if (
-        authService.isAuthenticated &&
-        this.currentPage !== "reset-password"
-      ) {
-        this.currentPage = "dashboard";
-        this.user = authService.getCurrentUser();
-        this.accounts = authService.accounts;
-      } else if (
-        window.innerWidth <= 768 &&
-        this.currentPage !== "reset-password"
-      ) {
-        this.currentPage = "login";
+      if (authService.isAuthenticated) {
+        this.user = authService.getCurrentUser() || this.user;
+        this.accounts = authService.accounts.length > 0 ? authService.accounts : this.accounts;
       }
 
       this.applyTheme();
-      this.render();
-      this.hideLoading();
       this.setupEventListeners();
+
+      if (isResetView || authService.isRecovery) {
+        await this.router.navigate("/reset-password", { replace: true });
+      } else {
+        await this.router.init();
+      }
+
+      this.hideLoading();
     } catch (error) {
       console.error("App init failed:", error);
       this.renderError(error);
@@ -130,13 +227,13 @@ class App {
                 <!-- Header -->
                 <header class="landing-header">
                     <div class="header-container">
-                        <div class="header-left">
+                        <div class="header-left" style="cursor: pointer;" onclick="app.router.navigate('/landing')">
                             <img src="/logo.png" alt="Credlyst" class="header-logo">
                             <span class="header-brand">Credlyst</span>
                         </div>
                         <div class="header-right">
-                            <button class="btn-signin" data-action="nav-login">Sign In</button>
-                            <button class="btn-getstarted" data-action="nav-signup">Get Started</button>
+                            <a href="/login" class="btn-signin" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Sign In</a>
+                            <a href="/signup" class="btn-getstarted" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Get Started</a>
                         </div>
                     </div>
                 </header>
@@ -153,15 +250,15 @@ class App {
                         <p class="hero-subtitle">A focused link management platform for job seekers, developers, and anyone who needs fast access to URLs. Use it on the web or from your browser extension.</p>
                         
                         <div class="hero-cta-group">
-                            <button class="btn btn-primary btn-lg icon-btn" data-action="nav-signup">
+                            <a href="/signup" class="btn btn-primary btn-lg icon-btn" style="text-decoration: none;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 9.5V4a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-5.5"/><path d="M2.5 14.5l6-6"/><path d="M14.5 8.5l-6 6"/></svg>
                                 Start Organizing
-                            </button>
-                            <button class="btn btn-white btn-lg icon-btn" data-action="nav-signup">
+                            </a>
+                            <a href="/signup" class="btn btn-white btn-lg icon-btn" style="text-decoration: none;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 Create Account
-                            </button>
-                            <button class="btn btn-white btn-lg icon-btn">
+                            </a>
+                            <button class="btn btn-white btn-lg icon-btn" onclick="document.querySelector('.features-section')?.scrollIntoView({ behavior: 'smooth' })">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 Take a Tour
                             </button>
@@ -249,7 +346,7 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
                         <h2>Welcome back</h2>
                         <p>Please enter your details to sign in.</p>
                     </div>
@@ -270,8 +367,8 @@ class App {
                         <button type="submit" class="btn btn-primary btn-block">Sign in</button>
                     </form>
                     <div class="auth-footer" style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.75rem;">
-                        <button type="button" class="btn-link" data-action="nav-forgot-password">Forgot password?</button>
-                        <span class="btn-link" data-action="nav-signup">Don't have an account? Sign up</span>
+                        <a href="/forgot-password" class="btn-link" style="text-decoration: none; text-align: center;">Forgot password?</a>
+                        <a href="/signup" class="btn-link" style="text-decoration: none; text-align: center;">Don't have an account? Sign up</a>
                     </div>
                 </div>
             </div>
@@ -283,7 +380,7 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
                         <h2>Create an account</h2>
                         <p>Start organizing your links today.</p>
                     </div>
@@ -308,7 +405,7 @@ class App {
                         <button type="submit" class="btn btn-primary btn-block">Create account</button>
                     </form>
                     <div class="auth-footer">
-                        <span class="btn-link" data-action="nav-login">Already have an account? Log in</span>
+                        <a href="/login" class="btn-link" style="text-decoration: none;">Already have an account? Log in</a>
                     </div>
                 </div>
             </div>
@@ -320,7 +417,7 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
                         <h2>Reset your password</h2>
                         <p>Enter the email linked to your account and we’ll send a recovery link.</p>
                     </div>
@@ -332,7 +429,7 @@ class App {
                         <button type="submit" class="btn btn-primary btn-block">Send reset link</button>
                     </form>
                     <div class="auth-footer">
-                        <span class="btn-link" data-action="nav-login">Back to sign in</span>
+                        <a href="/login" class="btn-link" style="text-decoration: none;">Back to sign in</a>
                     </div>
                 </div>
             </div>
@@ -344,7 +441,7 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem;">
+                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
                         <h2>Choose a new password</h2>
                         <p>Use the link from your email and set a new password below.</p>
                     </div>
@@ -370,7 +467,7 @@ class App {
                         <button type="submit" class="btn btn-primary btn-block">Update password</button>
                     </form>
                     <div class="auth-footer">
-                        <span class="btn-link" data-action="nav-login">Back to sign in</span>
+                        <a href="/login" class="btn-link" style="text-decoration: none;">Back to sign in</a>
                     </div>
                 </div>
             </div>
@@ -382,52 +479,39 @@ class App {
     const iconDashboard = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
     const iconHeart = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
     const iconClock = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+    const iconCategory = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>`;
     const iconSettings = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
     const iconSearch = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
-    const iconMenu = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
     const iconPlus = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-    const iconUser = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-    const iconCategory = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>`;
-
-    // Dynamic categories list
-    const categoriesHTML = this.categories
-      .map(
-        (cat) => `
-            <a href="#" class="nav-item tag-item" data-category="${cat.category}">
-                <span>#</span> ${cat.category} <small>(${cat.count})</small>
-            </a>
-        `,
-      )
-      .join("");
 
     return `
             <div class="dashboard-wrapper">
                 <!-- SIDEBAR -->
                 <aside class="sidebar" id="sidebar">
                     <div class="sidebar-top">
-                        <div class="logo-area">
+                        <div class="logo-area" style="cursor: pointer;" onclick="app.router.navigate('/')">
                             <img src="/logo.png" alt="Credlyst Logo" class="logo-image">
                             <span class="logo-text">Credlyst</span>
                         </div>
                         
                         <nav class="nav-menu">
-                            <a href="#" class="nav-item ${this.currentView === "all" ? "active" : ""}" data-view="all">
+                            <a href="/" class="nav-item ${this.currentView === "all" ? "active" : ""}" data-view="all">
                                 ${iconDashboard}
                                 <span>All Links</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === "favorites" ? "active" : ""}" data-view="favorites">
+                            <a href="/favorites" class="nav-item ${this.currentView === "favorites" ? "active" : ""}" data-view="favorites">
                                 ${iconHeart}
                                 <span>Favorites</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === "recent" ? "active" : ""}" data-view="recent">
+                            <a href="/recent" class="nav-item ${this.currentView === "recent" ? "active" : ""}" data-view="recent">
                                 ${iconClock}
                                 <span>Recent</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === "categories-page" ? "active" : ""}" data-view="categories-page">
+                            <a href="/categories" class="nav-item ${this.currentView === "categories-page" ? "active" : ""}" data-view="categories-page">
                                 ${iconCategory}
                                 <span>Categories</span>
                             </a>
-                            <a href="#" class="nav-item ${this.currentView === "settings" ? "active" : ""}" data-view="settings">
+                            <a href="/settings" class="nav-item ${this.currentView === "settings" ? "active" : ""}" data-view="settings">
                                 ${iconSettings}
                                 <span>Settings</span>
                             </a>
@@ -464,7 +548,7 @@ class App {
                 <main class="main-content">
                     <!-- Mobile Logo Section -->
                     <div class="mobile-logo-section">
-                        <div class="mobile-logo-left">
+                        <div class="mobile-logo-left" style="cursor: pointer;" onclick="app.router.navigate('/')">
                             <img src="/logo.png" alt="Credlyst" class="mobile-app-logo">
                             <span class="mobile-app-name">Credlyst</span>
                         </div>
@@ -539,23 +623,23 @@ class App {
                 <!-- MOBILE BOTTOM NAVIGATION -->
                 <nav class="mobile-nav">
                     <div class="mobile-nav-items">
-                        <a href="#" class="mobile-nav-item ${this.currentView === "all" ? "active" : ""}" data-view="all">
+                        <a href="/" class="mobile-nav-item ${this.currentView === "all" ? "active" : ""}" data-view="all">
                             ${iconDashboard}
                             <span>All</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === "favorites" ? "active" : ""}" data-view="favorites">
+                        <a href="/favorites" class="mobile-nav-item ${this.currentView === "favorites" ? "active" : ""}" data-view="favorites">
                             ${iconHeart}
                             <span>Favorites</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === "categories-page" ? "active" : ""}" data-view="categories-page">
+                        <a href="/categories" class="mobile-nav-item ${this.currentView === "categories-page" ? "active" : ""}" data-view="categories-page">
                             ${iconCategory}
                             <span>Categories</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === "recent" ? "active" : ""}" data-view="recent">
+                        <a href="/recent" class="mobile-nav-item ${this.currentView === "recent" ? "active" : ""}" data-view="recent">
                             ${iconClock}
                             <span>Recent</span>
                         </a>
-                        <a href="#" class="mobile-nav-item ${this.currentView === "settings" ? "active" : ""}" data-view="settings">
+                        <a href="/settings" class="mobile-nav-item ${this.currentView === "settings" ? "active" : ""}" data-view="settings">
                             ${iconSettings}
                             <span>Settings</span>
                         </a>
@@ -586,16 +670,13 @@ class App {
     document.addEventListener("click", (e) => {
       const action = e.target.closest("[data-action]")?.dataset.action;
       if (action === "nav-login") {
-        this.currentPage = "login";
-        this.render();
+        this.router.navigate("/login");
       }
       if (action === "nav-signup") {
-        this.currentPage = "signup";
-        this.render();
+        this.router.navigate("/signup");
       }
       if (action === "nav-forgot-password") {
-        this.currentPage = "forgot-password";
-        this.render();
+        this.router.navigate("/forgot-password");
       }
       if (action === "toggle-password") {
         const wrapper = e.target.closest(".password-wrapper");
@@ -613,12 +694,11 @@ class App {
         }
       }
       if (action === "add-account") {
-        this.currentPage = "login";
         document
           .getElementById("mobile-profile-dropdown")
           ?.classList.add("hidden");
         document.getElementById("profile-overlay")?.classList.add("hidden");
-        this.render();
+        this.router.navigate("/login");
       }
     });
   }
@@ -653,8 +733,7 @@ class App {
 
           // Redirect to dashboard after short delay
           setTimeout(() => {
-            this.currentPage = "dashboard";
-            this.render();
+            this.router.navigate("/");
           }, 800);
         } catch (error) {
           // Show error toast
@@ -696,8 +775,7 @@ class App {
 
           // Redirect to dashboard after short delay
           setTimeout(() => {
-            this.currentPage = "dashboard";
-            this.render();
+            this.router.navigate("/");
           }, 800);
         } catch (error) {
           // Show error toast
@@ -736,8 +814,7 @@ class App {
           toast.success("Password reset email sent. Please check your inbox.");
 
           setTimeout(() => {
-            this.currentPage = "login";
-            this.render();
+            this.router.navigate("/login");
           }, 1200);
         } catch (error) {
           toast.error(error.message || "Unable to send reset email.");
@@ -784,8 +861,7 @@ class App {
               document.title,
               window.location.pathname,
             );
-            this.currentPage = "login";
-            this.render();
+            this.router.navigate("/login");
           }, 1200);
         } catch (error) {
           toast.error(error.message || "Unable to update password.");
@@ -921,20 +997,19 @@ class App {
         });
       }
 
-      // Navigation items (All/Favorites/Recent) - works for both desktop and mobile
+      // Navigation items (All/Favorites/Recent/Categories/Settings) - works for both desktop and mobile
       document.querySelectorAll("[data-view]").forEach((item) => {
         item.addEventListener("click", (e) => {
           e.preventDefault();
-          this.currentView = e.currentTarget.dataset.view;
-          this.loadView();
-
-          // Update active states
-          document
-            .querySelectorAll("[data-view]")
-            .forEach((el) => el.classList.remove("active"));
-          document
-            .querySelectorAll(`[data-view="${this.currentView}"]`)
-            .forEach((el) => el.classList.add("active"));
+          const view = e.currentTarget.dataset.view;
+          let targetPath = "/";
+          if (view === "all") targetPath = "/";
+          else if (view === "favorites") targetPath = "/favorites";
+          else if (view === "recent") targetPath = "/recent";
+          else if (view === "categories-page") targetPath = "/categories";
+          else if (view === "settings") targetPath = "/settings";
+          else if (view && view.startsWith("category:")) targetPath = "/category/" + encodeURIComponent(view.replace("category:", ""));
+          this.router.navigate(targetPath);
         });
       });
 
@@ -942,8 +1017,8 @@ class App {
       document.querySelectorAll("[data-category]").forEach((item) => {
         item.addEventListener("click", (e) => {
           e.preventDefault();
-          this.currentView = "category:" + e.currentTarget.dataset.category;
-          this.loadView();
+          const cat = e.currentTarget.dataset.category;
+          this.router.navigate("/category/" + encodeURIComponent(cat));
         });
       });
     }
@@ -1186,7 +1261,7 @@ class App {
         const categoriesHTML = this.categories
           .map(
             (cat) => `
-                    <a href="#" class="nav-item tag-item" data-category="${cat.category}">
+                    <a href="/category/${encodeURIComponent(cat.category)}" class="nav-item tag-item ${this.currentView === "category:" + cat.category ? "active" : ""}" data-category="${cat.category}">
                         <span>#</span> ${cat.category} <small>(${cat.count})</small>
                     </a>
                 `,
@@ -1197,11 +1272,10 @@ class App {
           '<p style="padding: 0 1rem; color: var(--text-tertiary); font-size: 0.85rem;">No categories yet</p>';
 
         // Re-attach listeners
-        document.querySelectorAll("[data-category]").forEach((item) => {
+        document.querySelectorAll("#categories-list [data-category]").forEach((item) => {
           item.addEventListener("click", (e) => {
             e.preventDefault();
-            this.currentView = "category:" + e.currentTarget.dataset.category;
-            this.loadView();
+            this.router.navigate("/category/" + encodeURIComponent(e.currentTarget.dataset.category));
           });
         });
       }
@@ -1247,10 +1321,12 @@ class App {
       } else if (this.currentView === "categories-page") {
         title = "Categories";
         this.renderCategoriesPage();
+        this.updateActiveNavIndicators();
         return;
       } else if (this.currentView === "settings") {
         title = "Settings";
         this.renderSettingsPage();
+        this.updateActiveNavIndicators();
         return;
       } else if (this.currentView.startsWith("category:")) {
         const category = this.currentView.replace("category:", "");
@@ -1259,19 +1335,12 @@ class App {
         this.renderLinksList(links);
       }
 
-      document.getElementById("view-title").innerHTML =
-        `${title} <span class="count-badge">(${links.length})</span>`;
+      const viewTitleEl = document.getElementById("view-title");
+      if (viewTitleEl) {
+        viewTitleEl.innerHTML = `${title} <span class="count-badge">(${links.length})</span>`;
+      }
 
-      // Update active state in sidebar
-      document
-        .querySelectorAll(".nav-item")
-        .forEach((item) => item.classList.remove("active"));
-      const activeItem =
-        document.querySelector(`[data-view="${this.currentView}"]`) ||
-        document.querySelector(
-          `[data-category="${this.currentView.replace("category:", "")}"]`,
-        );
-      if (activeItem) activeItem.classList.add("active");
+      this.updateActiveNavIndicators();
     } catch (error) {
       console.error("Failed to load view:", error);
       this.renderLinksList([]);
@@ -1423,8 +1492,7 @@ class App {
   }
 
   viewCategory(categoryName) {
-    this.currentView = "category:" + categoryName;
-    this.loadView();
+    this.router.navigate("/category/" + encodeURIComponent(categoryName));
   }
 
   showCreateCategoryInline() {
@@ -1824,7 +1892,7 @@ class App {
                 <p class="link-desc">${description}</p>
                 
                 <div class="link-tags">
-                     <span class="tag">${link.category}</span>
+                     <a href="/category/${encodeURIComponent(link.category)}" class="tag" style="text-decoration: none; cursor: pointer;">${link.category}</a>
                 </div>
                 
                 <div class="url-bar">
@@ -2546,6 +2614,8 @@ class App {
       // Check if we're on categories page or manage modal
       if (this.currentView === "categories-page") {
         this.renderCategoriesPage();
+      } else if (this.currentView === "category:" + categoryName) {
+        this.router.navigate("/categories");
       } else {
         this.showManageCategoriesModal();
       }
