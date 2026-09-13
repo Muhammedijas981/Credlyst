@@ -59,7 +59,7 @@ class App {
           if (window.innerWidth <= 768) {
             return next("/login");
           }
-          return next("/landing");
+          return next();
         }
       }
 
@@ -85,8 +85,14 @@ class App {
     this.router.addRoute("/forgot-password", () => this.showPage("forgot-password"), { name: "forgot-password" });
     this.router.addRoute("/reset-password", () => this.showPage("reset-password"), { name: "reset-password" });
 
-    // Dashboard views
-    this.router.addRoute("/", () => this.showDashboardView("all"), { name: "home" });
+    // Home / Dashboard views
+    this.router.addRoute("/", () => {
+      if (authService.isAuthenticated) {
+        this.showDashboardView("all");
+      } else {
+        this.showPage("landing");
+      }
+    }, { name: "home" });
     this.router.addRoute("/all", () => this.showDashboardView("all"), { name: "all" });
     this.router.addRoute("/dashboard", () => this.showDashboardView("all"), { name: "dashboard" });
     this.router.addRoute("/favorites", () => this.showDashboardView("favorites"), { name: "favorites" });

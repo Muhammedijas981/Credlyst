@@ -34,6 +34,7 @@ function staticPrerenderPlugin() {
         },
         {
           path: "/landing",
+          canonical: "https://credlyst.ijas.space/",
           title: "Credlyst — Your Personal Link Vault & Bookmark Manager",
           description:
             "A practical, privacy-focused link management solution designed to free you from browser tab overload. Manage essential URLs effortlessly across Web App, Browser Extension, and Mobile with instant search and cloud sync.",
@@ -97,11 +98,12 @@ function staticPrerenderPlugin() {
           );
         }
 
-        // Update canonical URL and og:url
+        // Update canonical URL and og:url (ensure /landing canonicalizes to root /)
         const canonicalUrl =
-          route.path === "/"
+          route.canonical ||
+          (route.path === "/"
             ? "https://credlyst.ijas.space/"
-            : `https://credlyst.ijas.space${route.path}`;
+            : `https://credlyst.ijas.space${route.path}`);
         routeHtml = routeHtml.replace(
           /<link\s+rel=["']canonical["']\s+href=["'].*?["']\s*\/?>/i,
           `<link rel="canonical" href="${canonicalUrl}" />`

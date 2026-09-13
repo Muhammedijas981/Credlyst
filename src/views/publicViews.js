@@ -9,7 +9,7 @@ export function renderLandingPage() {
                 <!-- Header -->
                 <header class="landing-header">
                     <div class="header-container">
-                        <div class="header-left" style="cursor: pointer;" onclick="app.router.navigate('/landing')">
+                        <div class="header-left" style="cursor: pointer;" onclick="app.router.navigate('/')">
                             <img src="/logo.png" alt="Credlyst logo" class="header-logo" decoding="async">
                             <span class="header-brand">Credlyst</span>
                         </div>
