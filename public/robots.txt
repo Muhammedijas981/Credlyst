@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Disallow protected and private routes
+Disallow: /settings
+Disallow: /reset-password
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://credlyst.ijas.space/sitemap.xml

@@ -671,6 +671,7 @@ select option:hover {
   height: 24px;
 }
 
+.feature-card h2,
 .feature-card h3 {
   font-size: 18px;
   margin-bottom: 12px;
@@ -817,6 +818,7 @@ select option:hover {
   height: 56px;
 }
 
+.profile-info h3,
 .profile-info h4 {
   margin: 0 0 4px 0;
   font-size: 16px;
@@ -1178,6 +1180,7 @@ select option:hover {
   gap: 0.5rem;
 }
 
+.section-header h1,
 .section-header h2 {
   font-size: 1.75rem;
   font-weight: 700;
@@ -1528,6 +1531,7 @@ select option:hover {
   margin-bottom: 1.5rem;
 }
 
+.auth-header h1,
 .auth-header h2 {
   margin-bottom: 0.5rem;
   font-size: 2rem;
@@ -2223,6 +2227,7 @@ select option:hover {
   }
 
   /* Mobile section header */
+  .section-header h1,
   .section-header h2 {
     font-size: 1.5rem;
   }
@@ -2301,6 +2306,7 @@ select option:hover {
     margin-bottom: 1.75rem !important;
   }
 
+  .auth-header h1,
   .auth-header h2 {
     font-size: 1.5rem !important;
   }
@@ -2316,6 +2322,7 @@ select option:hover {
     padding: 0.875rem 1rem 100px;
   }
 
+  .section-header h1,
   .section-header h2 {
     font-size: 1.25rem;
   }
@@ -2426,6 +2433,7 @@ select option:hover {
   }
 
   /* Mobile section header */
+  .section-header h1,
   .section-header h2 {
     font-size: 1.5rem;
   }
@@ -2511,6 +2519,7 @@ select option:hover {
     padding: 0.875rem 1rem 100px;
   }
 
+  .section-header h1,
   .section-header h2 {
     font-size: 1.25rem;
   }

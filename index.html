@@ -3,18 +3,101 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credlyst — Your Personal Link Vault & Bookmark Manager</title>
     <meta
       name="description"
-      content="Credlyst - A beautiful, privacy-focused link management tool"
+      content="A practical, privacy-focused link management solution designed to free you from browser tab overload. Manage essential URLs effortlessly across Web App, Browser Extension, and Mobile with instant search and cloud sync."
     />
-    <title>Credlyst - Manage Your Links</title>
+    <meta
+      name="keywords"
+      content="link manager, bookmark manager, browser extension, tab overload, url organizer, cloud sync, privacy focused, instant search, productivity tools, credlyst, save links, bookmarks"
+    />
+    <meta name="author" content="Credlyst" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="canonical" href="https://credlyst.ijas.space/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://credlyst.ijas.space/" />
+    <meta
+      property="og:title"
+      content="Credlyst — Your Personal Link Vault & Bookmark Manager"
+    />
+    <meta
+      property="og:description"
+      content="Free your system from browser tab overload. Save links with Ctrl+Shift+S, search instantly with Ctrl+Shift+F, and sync across devices in real-time."
+    />
+    <meta property="og:image" content="https://credlyst.ijas.space/logo.png" />
+    <meta property="og:image:alt" content="Credlyst - Link Vault & Manager Logo" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:site_name" content="Credlyst" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://credlyst.ijas.space/" />
+    <meta
+      name="twitter:title"
+      content="Credlyst — Your Personal Link Vault & Bookmark Manager"
+    />
+    <meta
+      name="twitter:description"
+      content="Free your system from browser tab overload. Save links with Ctrl+Shift+S, search instantly with Ctrl+Shift+F, and sync across devices in real-time."
+    />
+    <meta name="twitter:image" content="https://credlyst.ijas.space/logo.png" />
+    <meta name="twitter:image:alt" content="Credlyst Logo" />
+
+    <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Preconnect and DNS Prefetch -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://ui-avatars.com" />
+    <link rel="dns-prefetch" href="https://www.google.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Credlyst",
+      "url": "https://credlyst.ijas.space/",
+      "description": "A practical, privacy-focused link management solution designed to free you from browser tab overload that slows down low-spec systems. Manage essential URLs effortlessly across Web App, Browser Extension, and Mobile.",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "All (Web Browser, Chrome Extension, Android, iOS)",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Save Links - Add your frequently used URLs to a centralized, organized list",
+        "Lightning-Fast Extension - Save any link instantly with Ctrl+Shift+S while browsing",
+        "Instant Search - Hit Ctrl+Shift+F to open a popup, search, and paste links right where you type",
+        "Seamless Sync - Real-time sync across web, browser extension, and mobile app",
+        "Privacy-Focused - Secure authentication with end-to-end encrypted sync",
+        "Favorites - Quick access to your most important links",
+        "Smart Organization - Custom categories for better structure",
+        "Dark Mode - Beautiful UI optimized for all lighting conditions",
+        "Multi-Platform - Works seamlessly on web, extension, and mobile",
+        "Multi-Account - Manage multiple accounts for different workflows"
+      ],
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "1.0.0",
+      "image": "https://credlyst.ijas.space/logo.png",
+      "screenshot": "https://credlyst.ijas.space/logo.png"
+    }
+    </script>
     <style>
       /* Inline loading screen styles - loads before external CSS */
       #loading {

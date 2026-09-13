@@ -168,7 +168,10 @@ class App {
   hideLoading() {
     const loading = document.getElementById("loading");
     if (loading) loading.style.opacity = "0";
-    setTimeout(() => loading?.remove(), 300);
+    setTimeout(() => {
+      loading?.remove();
+      document.dispatchEvent(new Event("custom-render-trigger"));
+    }, 300);
   }
 
   toggleTheme() {
@@ -228,7 +231,7 @@ class App {
                 <header class="landing-header">
                     <div class="header-container">
                         <div class="header-left" style="cursor: pointer;" onclick="app.router.navigate('/landing')">
-                            <img src="/logo.png" alt="Credlyst" class="header-logo">
+                            <img src="/logo.png" alt="Credlyst logo" class="header-logo" decoding="async">
                             <span class="header-brand">Credlyst</span>
                         </div>
                         <div class="header-right">
@@ -242,7 +245,7 @@ class App {
                 <header class="hero-section">
                     <div class="container hero-container">
                         <div class="hero-brand-pill">
-                            <div class="icon-circle"><img src="/logo.png" style="width: 16px;"></div>
+                            <div class="icon-circle"><img src="/logo.png" alt="Credlyst icon" style="width: 16px;" decoding="async"></div>
                             <div class="pill-text"><strong>Credlyst</strong> <span class="divider">|</span> Your Personal Link Vault</div>
                         </div>
                         
@@ -273,7 +276,7 @@ class App {
                             <!-- Card 1 -->
                             <div class="feature-card">
                                 <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>
-                                <h3>Link Management</h3>
+                                <h2>Link Management</h2>
                                 <p>Organize by title and URL, search instantly, and keep your most-used links at your fingertips.</p>
                                 <div class="card-tags">
                                     <span class="tag">Add</span><span class="tag">Edit</span><span class="tag">Delete</span><span class="tag">Copy</span>
@@ -282,7 +285,7 @@ class App {
                             <!-- Card 2 -->
                             <div class="feature-card">
                                 <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
-                                <h3>Secure & Private</h3>
+                                <h2>Secure & Private</h2>
                                 <p>Your data stays yours. Strong access controls and private-by-default storage.</p>
                                 <div class="card-tags">
                                     <span class="tag">Privacy</span><span class="tag">Encrypted</span><span class="tag">Control</span>
@@ -291,7 +294,7 @@ class App {
                             <!-- Card 3 -->
                             <div class="feature-card">
                                 <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-                                <h3>Lightning Fast</h3>
+                                <h2>Lightning Fast</h2>
                                 <p>Snappy search and instant actions so you never lose your flow.</p>
                                 <div class="card-tags">
                                     <span class="tag">Instant search</span><span class="tag">Quick actions</span><span class="tag">Extension</span>
@@ -318,10 +321,10 @@ class App {
                             <div class="testimonial-card">
                                 <div class="profile-header">
                                     <div class="profile-img">
-                                        <img src="https://ui-avatars.com/api/?name=Aishwarya+N&background=0D8ABC&color=fff&size=64" alt="Profile">
+                                        <img src="https://ui-avatars.com/api/?name=Aishwarya+N&background=0D8ABC&color=fff&size=64" alt="Aishwarya N. avatar" loading="lazy" decoding="async">
                                     </div>
                                     <div class="profile-info">
-                                        <h4>Aishwarya N.</h4>
+                                        <h3>Aishwarya N.</h3>
                                         <span>Frontend Engineer</span>
                                     </div>
                                 </div>
@@ -346,8 +349,8 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
-                        <h2>Welcome back</h2>
+                        <img src="/logo.png" alt="Credlyst logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')" decoding="async">
+                        <h1 class="auth-title">Welcome back</h1>
                         <p>Please enter your details to sign in.</p>
                     </div>
                     <form id="login-form">
@@ -380,8 +383,8 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
-                        <h2>Create an account</h2>
+                        <img src="/logo.png" alt="Credlyst logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')" decoding="async">
+                        <h1 class="auth-title">Create an account</h1>
                         <p>Start organizing your links today.</p>
                     </div>
                     <form id="signup-form">
@@ -417,8 +420,8 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
-                        <h2>Reset your password</h2>
+                        <img src="/logo.png" alt="Credlyst logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')" decoding="async">
+                        <h1 class="auth-title">Reset your password</h1>
                         <p>Enter the email linked to your account and we’ll send a recovery link.</p>
                     </div>
                     <form id="forgot-password-form">
@@ -441,8 +444,8 @@ class App {
             <div class="auth-page">
                 <div class="auth-card">
                     <div class="auth-header" style="text-align: center;">
-                        <img src="/logo.png" alt="Credlyst Logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')">
-                        <h2>Choose a new password</h2>
+                        <img src="/logo.png" alt="Credlyst logo" style="width: 48px; height: 48px; margin-bottom: 1rem; cursor: pointer;" onclick="app.router.navigate('/')" decoding="async">
+                        <h1 class="auth-title">Choose a new password</h1>
                         <p>Use the link from your email and set a new password below.</p>
                     </div>
                     <form id="reset-password-form">
@@ -490,7 +493,7 @@ class App {
                 <aside class="sidebar" id="sidebar">
                     <div class="sidebar-top">
                         <div class="logo-area" style="cursor: pointer;" onclick="app.router.navigate('/')">
-                            <img src="/logo.png" alt="Credlyst Logo" class="logo-image">
+                            <img src="/logo.png" alt="Credlyst logo" class="logo-image" decoding="async">
                             <span class="logo-text">Credlyst</span>
                         </div>
                         
@@ -549,7 +552,7 @@ class App {
                     <!-- Mobile Logo Section -->
                     <div class="mobile-logo-section">
                         <div class="mobile-logo-left" style="cursor: pointer;" onclick="app.router.navigate('/')">
-                            <img src="/logo.png" alt="Credlyst" class="mobile-app-logo">
+                            <img src="/logo.png" alt="Credlyst logo" class="mobile-app-logo" decoding="async">
                             <span class="mobile-app-name">Credlyst</span>
                         </div>
                         <div class="mobile-profile-action">
@@ -611,7 +614,7 @@ class App {
 
                     <div class="content-scroll">
                         <div class="section-header">
-                            <h2 id="view-title">All Links <span class="count-badge" id="total-count">...</span></h2>
+                            <h1 id="view-title">All Links <span class="count-badge" id="total-count">...</span></h1>
                         </div>
                         
                         <div id="links-grid" class="cards-grid">
@@ -1585,7 +1588,7 @@ class App {
   getProfileAvatarMarkup() {
     const avatarUrl = this.user?.avatar_url;
     if (avatarUrl) {
-      return `<img src="${avatarUrl}" alt="Profile" class="settings-avatar-image">`;
+      return `<img src="${avatarUrl}" alt="User avatar" class="settings-avatar-image" loading="lazy" decoding="async">`;
     }
 
     const initials = (this.user?.name || "U")
@@ -1878,7 +1881,7 @@ class App {
     return `
             <div class="link-card">
                 <div class="card-header">
-                    <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${domain}" class="link-favicon" onerror="this.src='https://www.google.com/s2/favicons?domain=example.com&sz=64'">
+                    <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${domain} favicon" class="link-favicon" loading="lazy" decoding="async" onerror="this.src='https://www.google.com/s2/favicons?domain=example.com&sz=64'">
                     <div class="actions">
                         <button class="btn-icon-sm favorite-btn ${link.favorite ? "active" : ""}" onclick="app.toggleFavorite('${link.id}', ${!link.favorite})" title="${link.favorite ? "Remove from favorites" : "Add to favorites"}">
                             ${iconStar}
